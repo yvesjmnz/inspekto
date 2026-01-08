@@ -1,10 +1,16 @@
-import { ComplaintForm } from './complaints_module'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import SubmitComplaintPage from './pages/SubmitComplaintPage'
+import VerifyEmailPage from './pages/VerifyEmailPage'
 
 function App() {
   return (
-    <div className="h-screen w-screen overflow-hidden">
-      <ComplaintForm />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<SubmitComplaintPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

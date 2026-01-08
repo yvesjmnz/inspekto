@@ -103,29 +103,8 @@ export default function ComplaintForm() {
   const documentsError = getFieldError(errors, 'documents');
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 border-b-4 border-blue-500 shadow-2xl animate-fade-in sticky top-0 z-50">
-        <div className="w-full px-16 py-12 flex items-center gap-10">
-          <img 
-            src="/logo.png" 
-            alt="Inspekto Logo" 
-            className="h-32 w-32 object-contain animate-fade-in drop-shadow-lg flex-shrink-0"
-            style={{ animationDelay: '0.1s' }}
-          />
-          <div>
-            <h1 className="text-6xl font-bold text-white tracking-tight drop-shadow-lg">Inspekto</h1>
-            <p className="mt-3 text-blue-100 text-xl font-light">Submit and manage your complaints</p>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 w-full px-8 py-16 flex justify-center">
-        <div className="w-full max-w-3xl">
-          {/* Main Form */}
-          <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-14">
+    <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-14">
+      <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
               {/* Success Message */}
               {submitMessage && (
                 <div className="mb-8 p-5 bg-emerald-50 border border-emerald-200 rounded-lg animate-slide-in-left">
@@ -288,10 +267,9 @@ export default function ComplaintForm() {
                 </button>
               </form>
             </div>
-          </div>
 
-          {/* Attachments Section */}
-          <div className="mt-12 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+      {/* Attachments Section */}
+      <div className="mt-12 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             <h2 className="text-2xl font-bold text-slate-900 mb-8">Supporting Materials</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -418,16 +396,5 @@ export default function ComplaintForm() {
             </div>
           </div>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 mt-12 animate-fade-in w-full" style={{ animationDelay: '0.7s' }}>
-        <div className="w-full px-12 py-8">
-          <p className="text-center text-sm text-slate-600 font-medium">
-            Your complaint will be reviewed and stored securely.
-          </p>
-        </div>
-      </footer>
-    </div>
   );
 }
