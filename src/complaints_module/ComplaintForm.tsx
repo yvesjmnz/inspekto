@@ -1,6 +1,6 @@
 /**
  * Complaints Module - Complaint Form Component
- * Main form for Phase 1: Basic complaint submission
+ * Professional complaint submission form with modern design
  */
 
 import { useState } from 'react';
@@ -22,6 +22,7 @@ export default function ComplaintForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleInputChange = (field: keyof ComplaintFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -35,6 +36,14 @@ export default function ComplaintForm() {
       [type]: Array.from(files),
     }));
     setErrors(prev => prev.filter(e => e.field !== type));
+    
+    if (type === 'images' && files.length > 0) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(files[0]);
+    }
   };
 
   const handleRemoveFile = (type: 'images' | 'documents', index: number) => {
@@ -42,6 +51,9 @@ export default function ComplaintForm() {
       ...prev,
       [type]: (prev[type] || []).filter((_, i) => i !== index),
     }));
+    if (type === 'images') {
+      setImagePreview(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,6 +82,7 @@ export default function ComplaintForm() {
           images: [],
           documents: [],
         });
+        setImagePreview(null);
         setErrors([]);
       } else {
         setSubmitError(result.message);
@@ -90,155 +103,232 @@ export default function ComplaintForm() {
   const documentsError = getFieldError(errors, 'documents');
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        {/* Card */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 sm:px-8">
-            <h1 className="text-3xl font-bold text-white">Submit a Complaint</h1>
-            <p className="mt-2 text-blue-100">
-              Help us improve by reporting issues with businesses in your area
-            </p>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 border-b-4 border-blue-500 shadow-2xl animate-fade-in sticky top-0 z-50">
+        <div className="w-full px-16 py-12 flex items-center gap-10">
+          <img 
+            src="/logo.png" 
+            alt="Inspekto Logo" 
+            className="h-32 w-32 object-contain animate-fade-in drop-shadow-lg flex-shrink-0"
+            style={{ animationDelay: '0.1s' }}
+          />
+          <div>
+            <h1 className="text-6xl font-bold text-white tracking-tight drop-shadow-lg">Inspekto</h1>
+            <p className="mt-3 text-blue-100 text-xl font-light">Submit and manage your complaints</p>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 w-full px-8 py-16 flex justify-center">
+        <div className="w-full max-w-3xl">
+          {/* Main Form */}
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-14">
+              {/* Success Message */}
+              {submitMessage && (
+                <div className="mb-8 p-5 bg-emerald-50 border border-emerald-200 rounded-lg animate-slide-in-left">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-base font-medium text-emerald-800">{submitMessage}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {submitError && (
+                <div className="mb-8 p-5 bg-red-50 border border-red-200 rounded-lg animate-slide-in-left">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-base font-medium text-red-800">{submitError}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-10">
+                {/* Business Name */}
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                  <label htmlFor="businessName" className="block text-lg font-semibold text-slate-900 mb-3.5">
+                    Business Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="businessName"
+                    type="text"
+                    value={formData.businessName || ''}
+                    onChange={(e) => handleInputChange('businessName', e.target.value)}
+                    placeholder="Enter business name"
+                    className={`w-full px-6 py-4 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-offset-0 transition duration-200 font-medium ${
+                      businessNameError 
+                        ? 'border-red-300 bg-red-50 focus:ring-red-400' 
+                        : 'border-slate-300 bg-white focus:ring-blue-400 focus:border-blue-400 hover:border-slate-400'
+                    }`}
+                  />
+                  {businessNameError && (
+                    <p className="mt-3 text-base text-red-600 flex items-center font-medium animate-shake">
+                      <svg className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      {businessNameError}
+                    </p>
+                  )}
+                </div>
+
+                {/* Business Address */}
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                  <label htmlFor="businessAddress" className="block text-lg font-semibold text-slate-900 mb-3.5">
+                    Address <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="businessAddress"
+                    value={formData.businessAddress || ''}
+                    onChange={(e) => handleInputChange('businessAddress', e.target.value)}
+                    placeholder="Street, City, Province"
+                    rows={4}
+                    className={`w-full px-6 py-4 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-offset-0 transition duration-200 font-medium resize-none ${
+                      businessAddressError 
+                        ? 'border-red-300 bg-red-50 focus:ring-red-400' 
+                        : 'border-slate-300 bg-white focus:ring-blue-400 focus:border-blue-400 hover:border-slate-400'
+                    }`}
+                  />
+                  {businessAddressError && (
+                    <p className="mt-3 text-base text-red-600 flex items-center font-medium animate-shake">
+                      <svg className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      {businessAddressError}
+                    </p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                  <label htmlFor="reporterEmail" className="block text-lg font-semibold text-slate-900 mb-3.5">
+                    Your Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="reporterEmail"
+                    type="email"
+                    value={formData.reporterEmail || ''}
+                    onChange={(e) => handleInputChange('reporterEmail', e.target.value)}
+                    placeholder="your.email@example.com"
+                    className={`w-full px-6 py-4 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-offset-0 transition duration-200 font-medium ${
+                      reporterEmailError 
+                        ? 'border-red-300 bg-red-50 focus:ring-red-400' 
+                        : 'border-slate-300 bg-white focus:ring-blue-400 focus:border-blue-400 hover:border-slate-400'
+                    }`}
+                  />
+                  {reporterEmailError && (
+                    <p className="mt-3 text-base text-red-600 flex items-center font-medium animate-shake">
+                      <svg className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      {reporterEmailError}
+                    </p>
+                  )}
+                </div>
+
+                {/* Complaint Description */}
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+                  <label htmlFor="complaintDescription" className="block text-lg font-semibold text-slate-900 mb-3.5">
+                    Description of Complaint <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="complaintDescription"
+                    value={formData.complaintDescription || ''}
+                    onChange={(e) => handleInputChange('complaintDescription', e.target.value)}
+                    placeholder="Please provide detailed information about the complaint..."
+                    rows={12}
+                    className={`w-full px-6 py-4 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-offset-0 transition duration-200 font-medium resize-none ${
+                      complaintDescriptionError 
+                        ? 'border-red-300 bg-red-50 focus:ring-red-400' 
+                        : 'border-slate-300 bg-white focus:ring-blue-400 focus:border-blue-400 hover:border-slate-400'
+                    }`}
+                  />
+                  {complaintDescriptionError && (
+                    <p className="mt-3 text-base text-red-600 flex items-center font-medium animate-shake">
+                      <svg className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      {complaintDescriptionError}
+                    </p>
+                  )}
+                  <p className="mt-3 text-sm text-slate-500 font-medium">Minimum 20 characters, maximum 5000</p>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg text-lg transition duration-200 flex items-center justify-center shadow-sm hover:shadow-md transform hover:scale-105 active:scale-95 animate-fade-in-up" style={{ animationDelay: '0.6s' }}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Complaint'
+                  )}
+                </button>
+              </form>
+            </div>
           </div>
 
-          {/* Content */}
-          <div className="px-6 py-8 sm:px-8">
-            {/* Success Message */}
-            {submitMessage && (
-              <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-green-800">{submitMessage}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Error Message */}
-            {submitError && (
-              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-red-800">{submitError}</p>
+          {/* Attachments Section */}
+          <div className="mt-12 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <h2 className="text-2xl font-bold text-slate-900 mb-8">Supporting Materials</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Image Preview */}
+              {imagePreview && (
+                <div className="md:col-span-2 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                  <h3 className="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wide">Image Preview</h3>
+                  <div className="relative bg-slate-100 rounded-lg overflow-hidden border border-slate-200 shadow-md transform hover:scale-102 transition">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute top-3 right-3 bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-semibold shadow-md">
+                      {formData.images?.length || 0} image{formData.images?.length !== 1 ? 's' : ''}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Business Name */}
-              <div>
-                <label htmlFor="businessName" className="block text-sm font-semibold text-gray-900">
-                  Business Name <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="businessName"
-                  type="text"
-                  value={formData.businessName || ''}
-                  onChange={(e) => handleInputChange('businessName', e.target.value)}
-                  placeholder="e.g., ABC Restaurant"
-                  className={`mt-2 block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                    businessNameError ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-                />
-                {businessNameError && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <span className="mr-1">⚠</span> {businessNameError}
-                  </p>
-                )}
-              </div>
-
-              {/* Business Address */}
-              <div>
-                <label htmlFor="businessAddress" className="block text-sm font-semibold text-gray-900">
-                  Business Address <span className="text-red-600">*</span>
-                </label>
-                <textarea
-                  id="businessAddress"
-                  value={formData.businessAddress || ''}
-                  onChange={(e) => handleInputChange('businessAddress', e.target.value)}
-                  placeholder="e.g., 123 Main Street, City, Province"
-                  rows={3}
-                  className={`mt-2 block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                    businessAddressError ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-                />
-                {businessAddressError && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <span className="mr-1">⚠</span> {businessAddressError}
-                  </p>
-                )}
-              </div>
-
-              {/* Complaint Description */}
-              <div>
-                <label htmlFor="complaintDescription" className="block text-sm font-semibold text-gray-900">
-                  Description of Complaint <span className="text-red-600">*</span>
-                </label>
-                <textarea
-                  id="complaintDescription"
-                  value={formData.complaintDescription || ''}
-                  onChange={(e) => handleInputChange('complaintDescription', e.target.value)}
-                  placeholder="Please provide detailed information about the complaint..."
-                  rows={5}
-                  className={`mt-2 block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                    complaintDescriptionError ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-                />
-                {complaintDescriptionError && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <span className="mr-1">⚠</span> {complaintDescriptionError}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-gray-500">Minimum 20 characters, maximum 5000</p>
-              </div>
-
-              {/* Email */}
-              <div>
-                <label htmlFor="reporterEmail" className="block text-sm font-semibold text-gray-900">
-                  Your Email <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id="reporterEmail"
-                  type="email"
-                  value={formData.reporterEmail || ''}
-                  onChange={(e) => handleInputChange('reporterEmail', e.target.value)}
-                  placeholder="your.email@example.com"
-                  className={`mt-2 block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                    reporterEmailError ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-                />
-                {reporterEmailError && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <span className="mr-1">⚠</span> {reporterEmailError}
-                  </p>
-                )}
-              </div>
+              )}
 
               {/* Images */}
-              <div>
-                <label htmlFor="images" className="block text-sm font-semibold text-gray-900">
-                  Photos <span className="text-gray-500 font-normal">(Optional)</span>
+              <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                <label htmlFor="images" className="block text-sm font-semibold text-slate-900 mb-3">
+                  Photos <span className="text-slate-500 font-normal">(Optional)</span>
                 </label>
-                <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition">
-                  <div className="space-y-1 text-center">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                <div className={`relative flex justify-center px-6 py-8 border-2 border-dashed rounded-lg transition duration-200 transform hover:scale-102 ${
+                  imagesError 
+                    ? 'border-red-300 bg-red-50' 
+                    : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100'
+                }`}>
+                  <div className="space-y-2 text-center">
+                    <svg className="mx-auto h-8 w-8 text-slate-400 animate-float" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                       <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-12l-3.172-3.172a4 4 0 00-5.656 0L28 20M9 20l3.172-3.172a4 4 0 015.656 0L28 20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    <div className="flex text-sm text-gray-600">
-                      <label htmlFor="images" className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
-                        <span>Upload images</span>
+                    <div className="flex flex-col text-sm text-slate-600">
+                      <label htmlFor="images" className="relative cursor-pointer font-semibold text-blue-600 hover:text-blue-700 transition">
+                        <span>Upload</span>
                         <input
                           id="images"
                           type="file"
@@ -248,30 +338,23 @@ export default function ComplaintForm() {
                           className="sr-only"
                         />
                       </label>
-                      <p className="pl-1">or drag and drop</p>
+                      <p className="text-slate-600">or drag</p>
                     </div>
-                    <p className="text-xs text-gray-500">JPEG, PNG, WebP up to 50MB each</p>
+                    <p className="text-xs text-slate-500 font-medium">50MB max</p>
                   </div>
                 </div>
                 {imagesError && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <span className="mr-1">⚠</span> {imagesError}
-                  </p>
+                  <p className="mt-2 text-sm text-red-600 font-medium animate-shake">{imagesError}</p>
                 )}
                 {formData.images && formData.images.length > 0 && (
-                  <div className="mt-4 space-y-2">
+                  <div className="mt-3 space-y-2">
                     {formData.images.map((file, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex items-center">
-                          <svg className="h-5 w-5 text-gray-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.3A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" />
-                          </svg>
-                          <span className="text-sm text-gray-700">{file.name}</span>
-                        </div>
+                      <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm hover:bg-slate-100 transition animate-slide-in-left">
+                        <span className="text-slate-700 truncate flex-1 font-medium">{file.name}</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveFile('images', idx)}
-                          className="text-red-600 hover:text-red-800 font-medium text-sm"
+                          className="text-red-600 hover:text-red-700 font-semibold ml-2 flex-shrink-0 transform hover:scale-110 transition"
                         >
                           Remove
                         </button>
@@ -282,18 +365,22 @@ export default function ComplaintForm() {
               </div>
 
               {/* Documents */}
-              <div>
-                <label htmlFor="documents" className="block text-sm font-semibold text-gray-900">
-                  Documents <span className="text-gray-500 font-normal">(Optional)</span>
+              <div className="animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+                <label htmlFor="documents" className="block text-sm font-semibold text-slate-900 mb-3">
+                  Documents <span className="text-slate-500 font-normal">(Optional)</span>
                 </label>
-                <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition">
-                  <div className="space-y-1 text-center">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                <div className={`relative flex justify-center px-6 py-8 border-2 border-dashed rounded-lg transition duration-200 transform hover:scale-102 ${
+                  documentsError 
+                    ? 'border-red-300 bg-red-50' 
+                    : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100'
+                }`}>
+                  <div className="space-y-2 text-center">
+                    <svg className="mx-auto h-8 w-8 text-slate-400 animate-float" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                       <path d="M8 14v20c0 2.2 1.8 4 4 4h24c2.2 0 4-1.8 4-4V14m-4-6H12c-2.2 0-4 1.8-4 4v2h32V12c0-2.2-1.8-4-4-4z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    <div className="flex text-sm text-gray-600">
-                      <label htmlFor="documents" className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
-                        <span>Upload documents</span>
+                    <div className="flex flex-col text-sm text-slate-600">
+                      <label htmlFor="documents" className="relative cursor-pointer font-semibold text-blue-600 hover:text-blue-700 transition">
+                        <span>Upload</span>
                         <input
                           id="documents"
                           type="file"
@@ -303,30 +390,23 @@ export default function ComplaintForm() {
                           className="sr-only"
                         />
                       </label>
-                      <p className="pl-1">or drag and drop</p>
+                      <p className="text-slate-600">or drag</p>
                     </div>
-                    <p className="text-xs text-gray-500">PDF, Word documents up to 100MB each</p>
+                    <p className="text-xs text-slate-500 font-medium">100MB max</p>
                   </div>
                 </div>
                 {documentsError && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <span className="mr-1">⚠</span> {documentsError}
-                  </p>
+                  <p className="mt-2 text-sm text-red-600 font-medium animate-shake">{documentsError}</p>
                 )}
                 {formData.documents && formData.documents.length > 0 && (
-                  <div className="mt-4 space-y-2">
+                  <div className="mt-3 space-y-2">
                     {formData.documents.map((file, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex items-center">
-                          <svg className="h-5 w-5 text-gray-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M8 16.5a1 1 0 11-2 0 1 1 0 012 0zM15 7H4a2 2 0 00-2 2v5a2 2 0 002 2h2.93a.5.5 0 00.42-.24l1.51-2.26a.5.5 0 01.84 0l1.51 2.26a.5.5 0 00.42.24H15a2 2 0 002-2V9a2 2 0 00-2-2zm-4-2a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
-                          <span className="text-sm text-gray-700">{file.name}</span>
-                        </div>
+                      <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm hover:bg-slate-100 transition animate-slide-in-left">
+                        <span className="text-slate-700 truncate flex-1 font-medium">{file.name}</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveFile('documents', idx)}
-                          className="text-red-600 hover:text-red-800 font-medium text-sm"
+                          className="text-red-600 hover:text-red-700 font-semibold ml-2 flex-shrink-0 transform hover:scale-110 transition"
                         >
                           Remove
                         </button>
@@ -335,38 +415,19 @@ export default function ComplaintForm() {
                   </div>
                 )}
               </div>
-
-              {/* Submit Button */}
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Submitting...
-                    </>
-                  ) : (
-                    'Submit Complaint'
-                  )}
-                </button>
-              </div>
-            </form>
-
-            {/* Footer */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <p className="text-xs text-gray-500 text-center">
-                <span className="text-red-600">*</span> Required fields. Your complaint will be reviewed and stored securely.
-              </p>
             </div>
           </div>
         </div>
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-slate-200 mt-12 animate-fade-in w-full" style={{ animationDelay: '0.7s' }}>
+        <div className="w-full px-12 py-8">
+          <p className="text-center text-sm text-slate-600 font-medium">
+            Your complaint will be reviewed and stored securely.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

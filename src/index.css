@@ -1,6 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
 
 * {
   margin: 0;
@@ -10,4 +15,133 @@
 
 body {
   font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Smooth animations */
+@layer utilities {
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes shake {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+      transform: translateX(-5px);
+    }
+    20%, 40%, 60%, 80% {
+      transform: translateX(5px);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  .animate-slide-in-left {
+    animation: slideInLeft 0.5s ease-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight 0.5s ease-out;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  /* Custom scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(71, 85, 105) rgb(30, 41, 59);
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: rgb(30, 41, 59);
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgb(71, 85, 105);
+    border-radius: 5px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgb(100, 116, 139);
+  }
+}
+
+/* Form input focus states */
+@layer components {
+  .form-input {
+    @apply px-6 py-4 text-lg border-2 rounded-xl shadow-lg focus:outline-none focus:ring-4 focus:ring-offset-2 transition duration-300;
+  }
+
+  .form-input-error {
+    @apply border-red-500 bg-red-50 focus:ring-red-500;
+  }
+
+  .form-input-valid {
+    @apply border-slate-600 bg-slate-700 focus:ring-blue-500 focus:border-blue-500;
+  }
 }

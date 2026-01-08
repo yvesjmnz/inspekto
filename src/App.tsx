@@ -1,7 +1,11 @@
 import { ComplaintForm } from './complaints_module'
 
 function App() {
-  return <ComplaintForm />
+  return (
+    <div className="h-screen w-screen overflow-hidden">
+      <ComplaintForm />
+    </div>
+  )
 }
 
 export default App
