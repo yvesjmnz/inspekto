@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { ComplaintForm } from '../complaints_module'
-import { supabase } from '../supabaseClient'
+import { ComplaintForm } from '..'
+import { supabase } from '../../supabaseClient'
 
 type Status =
   | { kind: 'idle' }

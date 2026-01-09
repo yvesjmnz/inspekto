@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import SubmitComplaintPage from './pages/SubmitComplaintPage'
-import VerifyEmailPage from './pages/VerifyEmailPage'
+import SubmitComplaintPage from './complaints_module/pages/SubmitComplaintPage'
+import VerifyEmailPage from './complaints_module/pages/VerifyEmailPage'
 
 function App() {
   return (

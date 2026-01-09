@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { supabase } from '../supabaseClient'
+import { supabase } from '../../supabaseClient'
 
 const VERIFIED_EMAIL_STORAGE_KEY = 'inspekto_verified_email'
 
