@@ -60,14 +60,14 @@ export default function SubmitComplaintPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 border-b-4 border-blue-500 shadow-2xl">
-        <div className="w-full px-16 py-12 flex items-center gap-10">
+        <div className="w-full px-16 py-12 flex items-center gap-8">
           <img
             src="/logo.png"
             alt="Inspekto Logo"
-            className="h-32 w-32 object-contain drop-shadow-lg flex-shrink-0"
+            className="h-24 w-24 object-contain drop-shadow-lg flex-shrink-0"
           />
           <div>
-            <h1 className="text-6xl font-bold text-white tracking-tight drop-shadow-lg">Inspekto</h1>
+            <h1 className="text-5xl font-bold text-white tracking-tight drop-shadow-lg">Inspekto</h1>
             <p className="mt-3 text-blue-100 text-xl font-light">Submit and manage your complaints</p>
           </div>
         </div>
