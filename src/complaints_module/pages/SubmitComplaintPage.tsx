@@ -58,8 +58,8 @@ export default function SubmitComplaintPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 border-b-4 border-blue-500 shadow-2xl">
+    <div className="min-h-screen bg-slate-50 flex flex-col gap-5">
+      <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 border-b-4 border-blue-500 shadow-2xl px-6 py-10 md:px-16">
         <div className="w-full px-16 py-12 flex items-center gap-8">
           <img
             src="/logo.png"
@@ -67,21 +67,23 @@ export default function SubmitComplaintPage() {
             className="h-24 w-24 object-contain drop-shadow-lg flex-shrink-0"
           />
           <div>
-            <h1 className="text-5xl font-bold text-white tracking-tight drop-shadow-lg">Inspekto</h1>
+            <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-lg">Inspekto</h1>
             <p className="mt-3 text-blue-100 text-xl font-light">Submit and manage your complaints</p>
           </div>
         </div>
       </header>
 
-      <main className="w-full px-8 py-16 flex justify-center">
+      <main className="w-full px-8 py-16 flex justify-center pb-20">
         <div className="w-full max-w-3xl">
           {!canAccessForm ? (
-            <section className="bg-white rounded-2xl shadow-lg border border-slate-200 p-10">
-              <h2 className="text-3xl font-bold text-slate-900">Submit a complaint</h2>
-              <p className="mt-2 text-slate-600">
-                To protect reporters, we verify your email before allowing complaint submission.
-              </p>
-
+            <section className="bg-white rounded-2xl shadow-lg border border-slate-200 p-16 md:p-20">
+              <div className="mb-12">
+                <h2 className="text-3xl font-bold text-slate-900">Submit a complaint</h2>
+                <p className="mt-2 text-slate-600 leading-relaxed">
+                  To protect reporters, we verify your email before allowing complaint submission.
+                </p>
+              </div>
+              
               <div className="mt-8">
                 <label className="block text-lg font-semibold text-slate-900 mb-3">Your email</label>
                 <input
