@@ -24,11 +24,11 @@ export function Panel({
         className
       )}
     >
-      <header className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-        <div className="text-base font-semibold tracking-tight text-slate-900">{title}</div>
-        {subtitle && <div className="mt-1 text-sm text-slate-600 leading-relaxed">{subtitle}</div>}
+      <header className="px-6 lg:px-8 py-5 lg:py-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+        <div className="text-lg lg:text-xl font-semibold tracking-tight text-slate-900">{title}</div>
+        {subtitle && <div className="mt-1 text-sm lg:text-base text-slate-600 leading-relaxed">{subtitle}</div>}
       </header>
-      <div className="px-6 py-6">{children}</div>
+      <div className="px-6 lg:px-8 py-6 lg:py-7">{children}</div>
     </section>
   );
 }

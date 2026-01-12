@@ -1,12 +1,3 @@
-/**
- * Complaints Module - Complaint Form (Polished)
- *
- * This revision restores the full multi-step form while:
- * - keeping the improved camera readiness flow
- * - keeping the UI kit (Button/Panel/Field/Alert/StepHeader)
- * - keeping consistent animations via Tailwind config
- */
-
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { submitComplaint } from './db';
@@ -17,6 +8,22 @@ import { Panel } from './ui/Panel';
 import { Field } from './ui/Field';
 import { Alert } from './ui/Alert';
 import { StepHeader } from './ui/StepHeader';
+import { HelpText } from './ui/HelpText';
+
+function formatGeo(value: number | undefined | null, digits = 6): string {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '—';
+  return value.toFixed(digits);
+}
+
+function formatAccuracyMeters(value: number | undefined | null): string {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '—';
+  return `±${Math.round(value)}m`;
+}
+
+function formatDistanceMeters(value: number | undefined | null): string {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '—';
+  return `${Math.round(value)}m`;
+}
 
 type FormStep = 'business-info' | 'verify-location' | 'complaint-details' | 'evidence' | 'review';
 
@@ -46,6 +53,21 @@ type CameraState =
   | { kind: 'open' }
   | { kind: 'ready' }
   | { kind: 'error'; message: string };
+
+function getCameraStatusLabel(state: CameraState): string {
+  switch (state.kind) {
+    case 'idle':
+      return 'Ready to open camera';
+    case 'starting':
+      return 'Starting camera...';
+    case 'open':
+      return 'Connecting to camera...';
+    case 'ready':
+      return 'Camera is ready';
+    case 'error':
+      return 'Camera error';
+  }
+}
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -84,7 +106,8 @@ async function waitForVideoReady(video: HTMLVideoElement, timeoutMs = 5000): Pro
   });
 }
 
-export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail?: string }) {
+export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string }) {
+  const formTopRef = useRef<HTMLDivElement | null>(null);
   const [currentStep, setCurrentStep] = useState<FormStep>('business-info');
   const currentStepIndex = FORM_STEPS.findIndex((s) => s.id === currentStep);
   const stepMeta = useMemo(() => FORM_STEPS[currentStepIndex], [currentStepIndex]);
@@ -434,6 +457,26 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
     }
   };
 
+  const focusFirstInvalidField = (stepErrors: FormError[]) => {
+    const fields: Array<FormError['field']> = stepErrors.map((e) => e.field);
+
+    const focusable: Array<FormError['field']> = [
+      'businessName',
+      'images',
+      'complaintDescription',
+      'reporterEmail',
+    ];
+
+    const first = focusable.find((f) => fields.includes(f));
+    if (!first) {
+      formTopRef.current?.focus?.();
+      return;
+    }
+
+    const el = document.querySelector<HTMLElement>(`[data-field="${first}"]`);
+    el?.focus?.();
+  };
+
   const validateStep = (step: FormStep): boolean => {
     const stepErrors: FormError[] = [];
 
@@ -472,6 +515,7 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
 
     if (stepErrors.length > 0) {
       setErrors(stepErrors);
+      window.setTimeout(() => focusFirstInvalidField(stepErrors), 0);
       return false;
     }
 
@@ -485,6 +529,7 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
     const idx = FORM_STEPS.findIndex((s) => s.id === currentStep);
     if (idx < FORM_STEPS.length - 1) {
       setCurrentStep(FORM_STEPS[idx + 1].id);
+      formTopRef.current?.focus?.();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -493,6 +538,7 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
     const idx = FORM_STEPS.findIndex((s) => s.id === currentStep);
     if (idx > 0) {
       setCurrentStep(FORM_STEPS[idx - 1].id);
+      formTopRef.current?.focus?.();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -568,8 +614,12 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-white">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
+    <div
+      ref={formTopRef}
+      tabIndex={-1}
+      className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-white focus:outline-none"
+    >
+      <div className="mx-auto w-full max-w-[1200px] px-6 lg:px-10 py-8 sm:py-10">
         <div className="space-y-6 animate-fade-in">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
             <StepHeader stepIndex={currentStepIndex} stepCount={FORM_STEPS.length} title={stepMeta.title} description={stepMeta.description} />
@@ -583,13 +633,15 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
             {currentStep === 'business-info' && (
               <div className="space-y-6 animate-slide-up">
                 <Panel title="Select business" subtitle="Search and choose the establishment you are reporting.">
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <div className="lg:col-span-7">
                       <Field label="Business name" hint="Type at least 2 characters" error={businessNameError}>
                         <input
+                          data-field="businessName"
                           value={businessSearch}
                           onChange={(e) => setBusinessSearch(e.target.value)}
                           placeholder="Search business name"
+                          autoComplete="off"
                           className={cx(
                             'w-full rounded-xl border px-4 py-3 text-base outline-none transition',
                             businessNameError ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white',
@@ -658,6 +710,13 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
                   </div>
                 </Panel>
 
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="text-sm font-semibold text-slate-900">Before you continue</div>
+                  <ul className="mt-2 list-disc pl-5 text-sm text-slate-700 space-y-1">
+                    <li>Select a business from the list so we capture the correct address.</li>
+                  </ul>
+                </div>
+
                 <div className="flex justify-between">
                   <div />
                   <Button type="button" size="lg" onClick={handleNextStep}>Continue</Button>
@@ -668,12 +727,13 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
             {/* Step 2: Photo & Location */}
             {currentStep === 'verify-location' && (
               <div className="space-y-6 animate-slide-up">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                   <div className="lg:col-span-7">
                     <Panel
                       title="Step 1: Take a photo"
                       subtitle="This supports authenticity checks. Please capture a clear photo at the location."
                     >
+                      <HelpText>A photo is required. Please allow camera access to continue.</HelpText>
                       <div className="space-y-4">
                         <div className="flex flex-wrap items-center gap-3">
                           <Button type="button" size="lg" onClick={() => void openCamera()} disabled={cameraState.kind === 'starting'}>
@@ -686,6 +746,7 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
                                   : 'Open camera'}
                           </Button>
 
+                          
                           {(cameraState.kind === 'open' || cameraState.kind === 'ready') && (
                             <Button type="button" variant="secondary" size="lg" onClick={stopCamera}>
                               Close camera
@@ -699,12 +760,15 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
                           )}
                         </div>
 
-                        <div className="text-xs text-slate-600">
-                          Status: <span className="font-semibold">{cameraState.kind}</span>
-                        </div>
-
                         {cameraState.kind === 'error' && (
                           <Alert kind="error" title="Camera could not start" message={cameraState.message} />
+                        )}
+
+                        {(cameraState.kind === 'starting' || cameraState.kind === 'open') && (
+                          <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-900">
+                            <div className="font-semibold">{getCameraStatusLabel(cameraState)}</div>
+                            <div className="mt-1 text-xs text-blue-800">Please wait while we prepare your camera.</div>
+                          </div>
                         )}
 
                         {(cameraState.kind === 'open' || cameraState.kind === 'ready') && (
@@ -730,7 +794,7 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
 
                         {imagePreview && (
                           <div className="rounded-2xl border border-slate-200 overflow-hidden animate-scale-in">
-                            <img src={imagePreview} alt="Captured" className="w-full h-80 object-cover" />
+                            <img src={imagePreview} alt="Uploaded evidence" className="w-full h-80 object-cover" />
                           </div>
                         )}
                       </div>
@@ -740,15 +804,22 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
                   <div className="lg:col-span-5">
                     <Panel title="Step 2: Verify location" subtitle="We compare your device location with the business address.">
                       <div className="space-y-4">
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                          <div className="text-sm font-semibold text-slate-900">Why we ask for location</div>
+                          <div className="mt-1 text-sm text-slate-700 leading-relaxed">
+                            We use it only to check that you are near the business you selected.
+                          </div>
+                        </div>
+
                         <div className="flex items-start justify-between gap-4">
                           <div className="text-sm text-slate-700">
                             <div className="font-semibold text-slate-900">Device location</div>
                             {locationStatus.kind === 'requesting' && <div className="mt-1">Requesting permission…</div>}
                             {locationStatus.kind === 'captured' && (
                               <div className="mt-1">
-                                {formData.location?.latitude.toFixed(6)}, {formData.location?.longitude.toFixed(6)}
+                                {formatGeo(formData.location?.latitude)}, {formatGeo(formData.location?.longitude)}
                                 {formData.location?.accuracy != null && (
-                                  <span className="text-slate-500"> (±{Math.round(formData.location.accuracy)}m)</span>
+                                  <span className="text-slate-500"> ({formatAccuracyMeters(formData.location?.accuracy)})</span>
                                 )}
                               </div>
                             )}
@@ -764,7 +835,12 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
                         </div>
 
                         <div className="flex flex-col sm:flex-row gap-3">
-                          <Button type="button" size="lg" disabled={isVerifying || !selectedBusiness?.business_pk || !formData.location} onClick={verifyBusinessProximity}>
+                          <Button
+                            type="button"
+                            size="lg"
+                            disabled={isVerifying || !selectedBusiness?.business_pk || !formData.location}
+                            onClick={verifyBusinessProximity}
+                          >
                             {isVerifying ? 'Verifying…' : 'Run verification'}
                           </Button>
 
@@ -782,7 +858,7 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
                             <div className="text-sm font-semibold text-slate-900">Result</div>
                             <div className="mt-1 text-sm text-slate-800 leading-relaxed">{verificationMessage}</div>
                             {typeof verificationDistanceMeters === 'number' && (
-                              <div className="mt-1 text-sm text-slate-700">Distance: {Math.round(verificationDistanceMeters)}m</div>
+                              <div className="mt-1 text-sm text-slate-700">Distance: {formatDistanceMeters(verificationDistanceMeters)}</div>
                             )}
                             {formData.locationVerificationTag && (
                               <div className="mt-1 text-sm text-slate-700">
@@ -813,10 +889,11 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
             {currentStep === 'complaint-details' && (
               <div className="space-y-6 animate-slide-up">
                 <Panel title="Complaint details" subtitle="Describe what happened in your own words.">
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <div className="lg:col-span-7">
                       <Field label="What happened?" hint="Minimum 20 characters" error={complaintDescriptionError}>
                         <textarea
+                          data-field="complaintDescription"
                           value={formData.complaintDescription || ''}
                           onChange={(e) => {
                             setFormData((prev) => ({ ...prev, complaintDescription: e.target.value }));
@@ -836,8 +913,11 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
                     <div className="lg:col-span-5 space-y-5">
                       <Field label="Your email" error={reporterEmailError}>
                         <input
+                          data-field="reporterEmail"
                           type="email"
                           value={formData.reporterEmail || ''}
+                          autoComplete="email"
+                          inputMode="email"
                           onChange={(e) => {
                             setFormData((prev) => ({ ...prev, reporterEmail: e.target.value }));
                             setErrors((prev) => prev.filter((err) => err.field !== 'reporterEmail'));
@@ -856,6 +936,9 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
                         <div className="mt-2 text-sm text-slate-800 leading-relaxed">
                           Your email is used to verify your complaint submission and for updates related to this report.
                         </div>
+                        <div className="mt-3 text-xs text-slate-600">
+                          If you do not have an email, ask a friend or family member for help.
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -871,9 +954,9 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
             {/* Step 4: Evidence */}
             {currentStep === 'evidence' && (
               <div className="space-y-6 animate-slide-up">
-                <Panel title="Photos" subtitle="Optional: add extra photos to support your complaint.">
+                <Panel title="Additional photos" subtitle="Optional: add extra photos to support your complaint.">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Field label="Additional photos (optional)" error={imagesError}>
+                    <Field label="Additional photos" error={imagesError} required={false}>
                       <input
                         type="file"
                         multiple
@@ -896,7 +979,7 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
             {currentStep === 'review' && (
               <div className="space-y-6 animate-slide-up">
                 <Panel title="Review" subtitle="Please confirm the information below.">
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <div className="lg:col-span-6 rounded-2xl border border-slate-200 bg-white p-5 animate-scale-in">
                       <div className="text-xs font-semibold text-slate-600 uppercase">Business</div>
                       <div className="mt-2 text-base font-semibold text-slate-900">{formData.businessName}</div>
@@ -916,6 +999,7 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
 
                     <div className="lg:col-span-12 rounded-2xl border border-slate-200 bg-slate-50 p-5 animate-scale-in">
                       <div className="text-xs font-semibold text-slate-600 uppercase">Certification</div>
+                      <HelpText>This step helps reduce false reports.</HelpText>
                       <label className="mt-3 flex items-start gap-3">
                         <input
                           type="checkbox"
