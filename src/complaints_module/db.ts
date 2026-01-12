@@ -1,58 +1,72 @@
 /**
  * Complaints Module - Database Operations
- * Simple CRUD for Phase 1
+ *
+ * Notes:
+ * - We must create the complaint first to get a stable complaintId.
+ * - Then upload files under complaintId/ in the appropriate bucket.
+ * - Then persist the public URLs back to the complaint record.
  */
 
 import { supabase } from '../supabaseClient';
 import type { ComplaintFormData, Complaint, SubmitResult } from './types';
 
+function getStorageBucket(type: 'image' | 'document') {
+  return type === 'image' ? 'complaint-images' : 'complaint-documents';
+}
+
+function safeExtFromFile(file: File) {
+  const fromName = file.name.includes('.') ? file.name.split('.').pop() : '';
+  const fromType = file.type.includes('/') ? file.type.split('/').pop() : '';
+  const ext = (fromName || fromType || '').toLowerCase();
+  return ext ? `.${ext.replace(/[^a-z0-9]/g, '')}` : '';
+}
+
+function randomToken(len = 10) {
+  return Math.random().toString(36).slice(2, 2 + len);
+}
+
 /**
- * Upload files to Supabase Storage
+ * Upload files to Supabase Storage and return public URLs.
  */
-async function uploadFiles(
-  files: File[],
-  type: 'image' | 'document',
-  complaintId: string
-): Promise<string[]> {
-  const bucket = type === 'image' ? 'complaint-images' : 'complaint-documents';
+async function uploadFiles(params: {
+  files: File[];
+  type: 'image' | 'document';
+  complaintId: string;
+}): Promise<string[]> {
+  const { files, type, complaintId } = params;
+  const bucket = getStorageBucket(type);
   const urls: string[] = [];
 
   for (const file of files) {
-    const fileName = `${complaintId}/${Date.now()}-${Math.random().toString(36).substring(7)}`;
-    
-    const { error } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, file);
+    const ext = safeExtFromFile(file);
+    const objectPath = `${complaintId}/${Date.now()}-${randomToken()}${ext}`;
 
-    if (error) {
-      console.error(`Upload error for ${file.name}:`, error);
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(objectPath, file, {
+        // Avoid silent overwrites
+        upsert: false,
+        contentType: file.type || undefined,
+      });
+
+    if (uploadError) {
+      console.error(`Upload error for ${file.name}:`, uploadError);
       continue;
     }
 
-    const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
-    urls.push(data.publicUrl);
+    const { data } = supabase.storage.from(bucket).getPublicUrl(objectPath);
+    if (data?.publicUrl) urls.push(data.publicUrl);
   }
 
   return urls;
 }
 
 /**
- * Create complaint in database
+ * Create complaint record first (no files), then upload files and update URLs.
  */
-export async function submitComplaint(
-  formData: ComplaintFormData
-): Promise<SubmitResult> {
+export async function submitComplaint(formData: ComplaintFormData): Promise<SubmitResult> {
   try {
-    // Upload files first
-    const imageUrls = formData.images.length > 0 
-      ? await uploadFiles(formData.images, 'image', 'temp')
-      : [];
-    
-    const documentUrls = formData.documents.length > 0
-      ? await uploadFiles(formData.documents, 'document', 'temp')
-      : [];
-
-    // Create complaint record
+    // 1) Create complaint record (without file URLs yet)
     const { data, error } = await supabase
       .from('complaints')
       .insert([
@@ -61,13 +75,15 @@ export async function submitComplaint(
           business_address: formData.businessAddress,
           complaint_description: formData.complaintDescription,
           reporter_email: formData.reporterEmail,
-          image_urls: imageUrls,
-          document_urls: documentUrls,
+
+          image_urls: [],
+          document_urls: [],
+
           authenticity_level: null,
           tags: formData.locationVerificationTag ? [formData.locationVerificationTag] : [],
           status: 'Submitted',
 
-          // Phase 3: Location-Based Authenticity (requires DB columns)
+          // Phase 3: Location-Based Authenticity
           business_pk: formData.businessPk ?? null,
           reporter_lat: formData.location?.latitude ?? null,
           reporter_lng: formData.location?.longitude ?? null,
@@ -76,7 +92,7 @@ export async function submitComplaint(
             ? new Date(formData.location.timestamp).toISOString()
             : null,
 
-          // User-confirmed pin
+          // Optional pin support (may be null)
           reporter_pin_lat: formData.pinnedLocation?.latitude ?? null,
           reporter_pin_lng: formData.pinnedLocation?.longitude ?? null,
 
@@ -89,31 +105,40 @@ export async function submitComplaint(
       .single();
 
     if (error) throw error;
+    if (!data?.id) throw new Error('Complaint insert succeeded but no id was returned');
 
-    // Re-upload files with proper complaint ID
-    if (data.id) {
-      const newImageUrls = formData.images.length > 0
-        ? await uploadFiles(formData.images, 'image', data.id)
-        : [];
-      
-      const newDocumentUrls = formData.documents.length > 0
-        ? await uploadFiles(formData.documents, 'document', data.id)
-        : [];
+    const complaintId = data.id as string;
 
-      // Update complaint with correct file URLs
-      await supabase
+    // 2) Upload files using the real complaint id
+    const [imageUrls, documentUrls] = await Promise.all([
+      formData.images.length > 0
+        ? uploadFiles({ files: formData.images, type: 'image', complaintId })
+        : Promise.resolve([]),
+      formData.documents.length > 0
+        ? uploadFiles({ files: formData.documents, type: 'document', complaintId })
+        : Promise.resolve([]),
+    ]);
+
+    // 3) Persist URLs
+    if (imageUrls.length > 0 || documentUrls.length > 0) {
+      const { error: updateError } = await supabase
         .from('complaints')
         .update({
-          image_urls: newImageUrls,
-          document_urls: newDocumentUrls,
+          image_urls: imageUrls,
+          document_urls: documentUrls,
         })
-        .eq('id', data.id);
+        .eq('id', complaintId);
+
+      if (updateError) {
+        console.error('Failed to update complaint file URLs:', updateError);
+        // We still return success because complaint exists; files may still have uploaded.
+      }
     }
 
     return {
       success: true,
       message: 'Complaint submitted successfully. Thank you for reporting this issue.',
-      complaintId: data.id,
+      complaintId,
     };
   } catch (error) {
     console.error('Submit complaint error:', error);
@@ -129,11 +154,7 @@ export async function submitComplaint(
  */
 export async function getComplaint(id: string): Promise<Complaint | null> {
   try {
-    const { data, error } = await supabase
-      .from('complaints')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data, error } = await supabase.from('complaints').select('*').eq('id', id).single();
 
     if (error) throw error;
     return data;

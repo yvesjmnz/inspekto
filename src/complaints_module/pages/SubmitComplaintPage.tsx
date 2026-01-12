@@ -60,17 +60,17 @@ export default function SubmitComplaintPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-      <header className="bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 border-b-4 border-amber-600 shadow-2xl">
-        <div className="w-full px-16 py-12 flex items-center gap-10 animate-fade-in">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
+      <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 shadow-xl border-b border-slate-700">
+        <div className="w-full px-6 sm:px-10 lg:px-16 py-10 sm:py-12 flex items-center gap-8 sm:gap-10 animate-fade-in">
           <img
             src="/logo.png"
             alt="Inspekto Logo"
-            className="h-32 w-32 object-contain drop-shadow-lg flex-shrink-0 transform hover:scale-105 transition duration-300"
+            className="h-24 sm:h-28 lg:h-32 w-24 sm:w-28 lg:w-32 object-contain drop-shadow-lg flex-shrink-0 transform hover:scale-110 transition-transform duration-300"
           />
-          <div>
-            <h1 className="text-6xl font-bold text-white tracking-tight drop-shadow-lg">Inspekto</h1>
-            <p className="mt-3 text-slate-300 text-xl font-light tracking-wide">Official Complaint Management System</p>
+          <div className="flex-1">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight">Inspekto</h1>
+            <p className="mt-2 sm:mt-3 text-slate-300 text-base sm:text-lg lg:text-xl font-medium tracking-wide">Official Complaint Management System</p>
           </div>
         </div>
       </header>
