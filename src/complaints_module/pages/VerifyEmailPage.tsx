@@ -47,9 +47,9 @@ export default function VerifyEmailPage() {
   }, [navigate, token])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-start justify-center px-6 py-12">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex items-start justify-center px-6 py-12">
       <div className="w-full max-w-4xl">
-        <div className="bg-white rounded-xl shadow-2xl border border-slate-200 p-12 md:p-16 animate-fade-in-up">
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-12 md:p-16 animate-fade-in-up">
           <div className="text-center mb-10">
             <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Email Verification</h1>
             <p className="mt-3 text-slate-600 text-lg">Processing your verification request</p>
@@ -63,7 +63,7 @@ export default function VerifyEmailPage() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               </div>
-              <p className="text-center text-slate-700 font-medium text-lg">Verifying your email address...</p>
+              <p className="text-center text-slate-700 font-semibold text-lg">Verifying your email address...</p>
               <p className="text-center text-slate-500 text-sm mt-3">This may take a few moments</p>
             </div>
           )}
@@ -78,7 +78,7 @@ export default function VerifyEmailPage() {
                   </svg>
                 </div>
               </div>
-              <div className="bg-emerald-50 border-l-4 border-emerald-600 rounded-lg p-6 mb-6">
+              <div className="bg-emerald-50 border-l-4 border-emerald-500 rounded-lg p-6 mb-6 shadow-md">
                 <p className="text-emerald-900 font-bold text-lg text-center">Email verified successfully</p>
                 <p className="text-emerald-800 text-sm text-center mt-2">Redirecting to complaint form...</p>
               </div>
@@ -95,14 +95,14 @@ export default function VerifyEmailPage() {
                   </svg>
                 </div>
               </div>
-              <div className="bg-red-50 border-l-4 border-red-600 rounded-lg p-6 mb-6">
+              <div className="bg-red-50 border-l-4 border-red-500 rounded-lg p-6 mb-6 shadow-md">
                 <p className="text-red-900 font-bold text-lg">Verification failed</p>
                 <p className="text-red-800 text-sm mt-2">{status.message}</p>
               </div>
               <button
                 type="button"
                 onClick={() => navigate('/', { replace: true })}
-                className="w-full bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
