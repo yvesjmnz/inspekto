@@ -9,7 +9,6 @@ export interface ComplaintFormData {
   complaintDescription: string;
   reporterEmail: string;
   images: File[];
-  documents: File[];
 
   // Phase 3: Location-Based Authenticity
   businessPk?: number;
@@ -41,7 +40,6 @@ export interface Complaint {
   complaint_description: string;
   reporter_email: string;
   image_urls: string[];
-  document_urls: string[];
   authenticity_level: null; // Phase 1: always null
   tags: string[];
   created_at: string;

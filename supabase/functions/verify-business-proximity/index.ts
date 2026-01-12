@@ -58,13 +58,7 @@ function getSupabaseClient(req: Request) {
     throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
   }
 
-  return createClient(supabaseUrl, supabaseServiceRoleKey, {
-    global: {
-      headers: {
-        Authorization: req.headers.get('Authorization') ?? '',
-      },
-    },
-  });
+  return createClient(supabaseUrl, supabaseServiceRoleKey);
 }
 
 async function geocodeGoogle(address: string): Promise<{ lat: number; lng: number } | null> {

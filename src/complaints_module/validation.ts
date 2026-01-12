@@ -11,7 +11,6 @@ const RULES = {
   complaintDescription: { min: 20, max: 5000 },
   reporterEmail: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   images: { maxCount: 10, maxSize: 50 * 1024 * 1024, types: ['image/jpeg', 'image/png', 'image/webp'] },
-  documents: { maxCount: 5, maxSize: 100 * 1024 * 1024, types: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'] },
 };
 
 export function validateForm(data: Partial<ComplaintFormData>): FormError[] {
@@ -63,23 +62,6 @@ export function validateForm(data: Partial<ComplaintFormData>): FormError[] {
       }
       if (!RULES.images.types.includes(file.type)) {
         errors.push({ field: 'images', message: `Invalid image type` });
-        break;
-      }
-    }
-  }
-
-  // Documents
-  if (data.documents && data.documents.length > 0) {
-    if (data.documents.length > RULES.documents.maxCount) {
-      errors.push({ field: 'documents', message: `Maximum ${RULES.documents.maxCount} documents` });
-    }
-    for (const file of data.documents) {
-      if (file.size > RULES.documents.maxSize) {
-        errors.push({ field: 'documents', message: `Document too large (max 100MB)` });
-        break;
-      }
-      if (!RULES.documents.types.includes(file.type)) {
-        errors.push({ field: 'documents', message: `Invalid document type` });
         break;
       }
     }

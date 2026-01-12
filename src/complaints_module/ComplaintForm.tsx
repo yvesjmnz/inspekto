@@ -118,7 +118,6 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
     complaintDescription: '',
     reporterEmail: prefillEmail ?? '',
     images: [],
-    documents: [],
     businessPk: undefined,
     location: undefined,
     locationVerificationTag: undefined,
@@ -136,7 +135,6 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
   const complaintDescriptionError = getFieldError(errors, 'complaintDescription');
   const reporterEmailError = getFieldError(errors, 'reporterEmail');
   const imagesError = getFieldError(errors, 'images');
-  const documentsError = getFieldError(errors, 'documents');
 
   const requestDeviceLocation = () => {
     if (!('geolocation' in navigator)) {
@@ -178,6 +176,10 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
     requestDeviceLocation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    setFormData((prev) => ({ ...prev, reporterEmail: prefillEmail ?? prev.reporterEmail ?? '' }));
+  }, [prefillEmail]);
 
   // Business lookup (debounced)
   useEffect(() => {
@@ -511,7 +513,6 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
         complaintDescription: formData.complaintDescription || '',
         reporterEmail: formData.reporterEmail || '',
         images: formData.images || [],
-        documents: formData.documents || [],
         businessPk: formData.businessPk,
         location: formData.location,
         locationVerificationTag: formData.locationVerificationTag,
@@ -530,7 +531,6 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
           complaintDescription: '',
           reporterEmail: '',
           images: [],
-          documents: [],
           businessPk: undefined,
           location: undefined,
           locationVerificationTag: undefined,
@@ -555,13 +555,13 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
     }
   };
 
-  const handleEvidenceFiles = (type: 'documents' | 'images', files: FileList | null) => {
+  const handleEvidenceFiles = (type: 'images', files: FileList | null) => {
     if (!files) return;
     const list = Array.from(files);
 
     setFormData((prev) => ({
       ...prev,
-      [type]: type === 'images' ? [...(prev.images || []), ...list] : list,
+      images: [...(prev.images || []), ...list],
     }));
 
     setErrors((prev) => prev.filter((e) => e.field !== type));
@@ -571,7 +571,9 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-white">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
         <div className="space-y-6 animate-fade-in">
-          <StepHeader stepIndex={currentStepIndex} stepCount={FORM_STEPS.length} title={stepMeta.title} description={stepMeta.description} />
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+            <StepHeader stepIndex={currentStepIndex} stepCount={FORM_STEPS.length} title={stepMeta.title} description={stepMeta.description} />
+          </div>
 
           {submitMessage && <Alert kind="success" title="Submitted" message={submitMessage} />}
           {submitError && <Alert kind="error" title="Submission failed" message={submitError} />}
@@ -597,7 +599,7 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
                       </Field>
 
                       {(isBusinessSearching || businessResults.length > 0) && (
-                        <div className="mt-3 rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                        <div className="mt-3 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                           {isBusinessSearching ? (
                             <div className="p-4 text-sm text-slate-600">Searching…</div>
                           ) : (
@@ -606,21 +608,21 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
                                 <li key={b.business_pk}>
                                   <button
                                     type="button"
-                                    className="w-full text-left px-4 py-3 hover:bg-slate-50 transition"
+                                    className="w-full text-left px-4 py-3 hover:bg-slate-50 transition focus:outline-none focus:bg-slate-50"
                                     onClick={() => {
-                                      setSelectedBusiness(b);
-                                      setBusinessSearch(b.business_name || '');
-                                      setBusinessResults([]);
+                                      setSelectedBusiness(b)
+                                      setBusinessSearch(b.business_name || '')
+                                      setBusinessResults([])
                                       setFormData((prev) => ({
                                         ...prev,
                                         businessPk: b.business_pk,
                                         businessName: b.business_name || '',
                                         businessAddress: b.business_address || '',
                                         locationVerificationTag: undefined,
-                                      }));
-                                      setVerificationMessage(null);
-                                      setVerificationDistanceMeters(null);
-                                      setErrors((prev) => prev.filter((e) => e.field !== 'businessName'));
+                                      }))
+                                      setVerificationMessage(null)
+                                      setVerificationDistanceMeters(null)
+                                      setErrors((prev) => prev.filter((e) => e.field !== 'businessName'))
                                     }}
                                   >
                                     <div className="text-sm font-semibold text-slate-900">{b.business_name || 'Unnamed business'}</div>
@@ -628,7 +630,9 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
                                   </button>
                                 </li>
                               ))}
-                              {businessResults.length === 0 && <li className="p-4 text-sm text-slate-600">No matches found.</li>}
+                              {businessResults.length === 0 && (
+                                <li className="p-4 text-sm text-slate-600">No matches found.</li>
+                              )}
                             </ul>
                           )}
                         </div>
@@ -867,24 +871,14 @@ export default function ComplaintFormRedesigned({ prefillEmail }: { prefillEmail
             {/* Step 4: Evidence */}
             {currentStep === 'evidence' && (
               <div className="space-y-6 animate-slide-up">
-                <Panel title="Optional supporting files" subtitle="Add more photos or documents if you have them.">
+                <Panel title="Photos" subtitle="Optional: add extra photos to support your complaint.">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Field label="More photos (optional)" error={imagesError}>
+                    <Field label="Additional photos (optional)" error={imagesError}>
                       <input
                         type="file"
                         multiple
                         accept="image/jpeg,image/png,image/webp"
                         onChange={(e) => handleEvidenceFiles('images', e.target.files)}
-                        className="block w-full text-sm text-slate-700"
-                      />
-                    </Field>
-
-                    <Field label="Documents (optional)" error={documentsError}>
-                      <input
-                        type="file"
-                        multiple
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => handleEvidenceFiles('documents', e.target.files)}
                         className="block w-full text-sm text-slate-700"
                       />
                     </Field>

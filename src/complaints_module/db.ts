@@ -10,8 +10,8 @@
 import { supabase } from '../supabaseClient';
 import type { ComplaintFormData, Complaint, SubmitResult } from './types';
 
-function getStorageBucket(type: 'image' | 'document') {
-  return type === 'image' ? 'complaint-images' : 'complaint-documents';
+function getStorageBucket(type: 'image') {
+  return 'complaint-images';
 }
 
 function safeExtFromFile(file: File) {
@@ -30,7 +30,7 @@ function randomToken(len = 10) {
  */
 async function uploadFiles(params: {
   files: File[];
-  type: 'image' | 'document';
+  type: 'image';
   complaintId: string;
 }): Promise<string[]> {
   const { files, type, complaintId } = params;
@@ -77,8 +77,7 @@ export async function submitComplaint(formData: ComplaintFormData): Promise<Subm
           reporter_email: formData.reporterEmail,
 
           image_urls: [],
-          document_urls: [],
-
+          
           authenticity_level: null,
           tags: formData.locationVerificationTag ? [formData.locationVerificationTag] : [],
           status: 'Submitted',
@@ -110,22 +109,16 @@ export async function submitComplaint(formData: ComplaintFormData): Promise<Subm
     const complaintId = data.id as string;
 
     // 2) Upload files using the real complaint id
-    const [imageUrls, documentUrls] = await Promise.all([
-      formData.images.length > 0
-        ? uploadFiles({ files: formData.images, type: 'image', complaintId })
-        : Promise.resolve([]),
-      formData.documents.length > 0
-        ? uploadFiles({ files: formData.documents, type: 'document', complaintId })
-        : Promise.resolve([]),
-    ]);
+    const imageUrls = formData.images.length > 0
+      ? await uploadFiles({ files: formData.images, type: 'image', complaintId })
+      : [];
 
     // 3) Persist URLs
-    if (imageUrls.length > 0 || documentUrls.length > 0) {
+    if (imageUrls.length > 0) {
       const { error: updateError } = await supabase
         .from('complaints')
         .update({
           image_urls: imageUrls,
-          document_urls: documentUrls,
         })
         .eq('id', complaintId);
 
