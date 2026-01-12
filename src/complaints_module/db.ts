@@ -64,8 +64,25 @@ export async function submitComplaint(
           image_urls: imageUrls,
           document_urls: documentUrls,
           authenticity_level: null,
-          tags: [],
+          tags: formData.locationVerificationTag ? [formData.locationVerificationTag] : [],
           status: 'Submitted',
+
+          // Phase 3: Location-Based Authenticity (requires DB columns)
+          business_pk: formData.businessPk ?? null,
+          reporter_lat: formData.location?.latitude ?? null,
+          reporter_lng: formData.location?.longitude ?? null,
+          reporter_accuracy: formData.location?.accuracy ?? null,
+          reporter_location_timestamp: formData.location?.timestamp
+            ? new Date(formData.location.timestamp).toISOString()
+            : null,
+
+          // User-confirmed pin
+          reporter_pin_lat: formData.pinnedLocation?.latitude ?? null,
+          reporter_pin_lng: formData.pinnedLocation?.longitude ?? null,
+
+          // Certification
+          certification_accepted: formData.certificationAccepted ?? false,
+          certification_accepted_at: formData.certificationAccepted ? new Date().toISOString() : null,
         },
       ])
       .select('id')

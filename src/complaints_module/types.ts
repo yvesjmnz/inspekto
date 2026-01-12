@@ -10,6 +10,28 @@ export interface ComplaintFormData {
   reporterEmail: string;
   images: File[];
   documents: File[];
+
+  // Phase 3: Location-Based Authenticity
+  businessPk?: number;
+
+  // Device-captured location
+  location?: {
+    latitude: number;
+    longitude: number;
+    accuracy: number | null;
+    timestamp: number;
+  };
+
+  // User-confirmed pin location (Google Maps)
+  pinnedLocation?: {
+    latitude: number;
+    longitude: number;
+  };
+
+  locationVerificationTag?: 'Location Verified' | 'Failed Location Verification';
+
+  // Certification (final step)
+  certificationAccepted?: boolean;
 }
 
 export interface Complaint {
@@ -21,8 +43,21 @@ export interface Complaint {
   image_urls: string[];
   document_urls: string[];
   authenticity_level: null; // Phase 1: always null
-  tags: string[]; // Phase 1: always empty
+  tags: string[];
   created_at: string;
+
+  // Phase 3: Location-Based Authenticity (optional until DB updated)
+  business_pk?: number | null;
+  reporter_lat?: number | null;
+  reporter_lng?: number | null;
+  reporter_accuracy?: number | null;
+  reporter_location_timestamp?: string | null;
+
+  reporter_pin_lat?: number | null;
+  reporter_pin_lng?: number | null;
+
+  certification_accepted?: boolean | null;
+  certification_accepted_at?: string | null;
 }
 
 export interface FormError {
