@@ -28,6 +28,8 @@ export default function SubmitComplaintPage() {
     return stored ? normalizeEmail(stored) : null
   }, [])
 
+  const [useVerifiedEmailForForm, setUseVerifiedEmailForForm] = useState(true)
+
   const canAccessForm = verifiedEmail !== null
 
   const requestVerification = async () => {
@@ -73,8 +75,8 @@ export default function SubmitComplaintPage() {
         </div>
       </header>
 
-      <main className="w-full px-8 py-16 flex justify-center">
-        <div className="w-full max-w-3xl">
+      <main className="w-full px-8 py-12 flex justify-center">
+        <div className="w-full max-w-6xl">
           {!canAccessForm ? (
             <section className="bg-white rounded-xl shadow-2xl border border-slate-200 p-12 animate-fade-in-up">
               <div className="mb-8 pb-8 border-b-2 border-slate-200">
@@ -89,7 +91,7 @@ export default function SubmitComplaintPage() {
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@example.com"
+                  placeholder="name@example.com"
                   className="w-full px-6 py-4 border-2 border-slate-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition duration-300 font-medium bg-white hover:border-slate-400"
                 />
 
@@ -149,23 +151,36 @@ export default function SubmitComplaintPage() {
             </section>
           ) : (
             <section className="animate-fade-in-up">
-              <div className="mb-8 bg-white rounded-xl shadow-lg border border-slate-200 p-6 transform hover:shadow-xl transition duration-300">
-                <div className="flex items-center justify-between gap-4">
+              <div className="mb-8 bg-white rounded-xl shadow-lg border border-slate-200 p-8 md:p-10 transform hover:shadow-xl transition duration-300">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                   <div className="flex-1">
                     <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Verified Email Address</p>
                     <p className="text-xl font-bold text-slate-900 break-all mt-2">{verifiedEmail}</p>
+
+                    <label className="mt-5 flex items-center gap-3 text-sm font-semibold text-slate-800 select-none">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={useVerifiedEmailForForm}
+                        onChange={(e) => setUseVerifiedEmailForForm(e.target.checked)}
+                      />
+                      Use this email for the complaint form
+                    </label>
                   </div>
-                  <button
-                    type="button"
-                    onClick={clearVerification}
-                    className="text-sm font-bold text-slate-600 hover:text-slate-900 px-4 py-2 rounded-lg hover:bg-slate-100 transition duration-200 whitespace-nowrap"
-                  >
-                    Change Email
-                  </button>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={clearVerification}
+                      className="text-sm font-bold text-slate-600 hover:text-slate-900 px-4 py-2 rounded-lg hover:bg-slate-100 transition duration-200 whitespace-nowrap"
+                    >
+                      Change Email
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <ComplaintForm />
+              <ComplaintForm prefillEmail={useVerifiedEmailForForm ? verifiedEmail ?? undefined : undefined} />
             </section>
           )}
         </div>

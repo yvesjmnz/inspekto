@@ -47,9 +47,9 @@ export default function VerifyEmailPage() {
   }, [navigate, token])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-lg">
-        <div className="bg-white rounded-xl shadow-2xl border border-slate-200 p-12 animate-fade-in-up">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-start justify-center px-6 py-12">
+      <div className="w-full max-w-4xl">
+        <div className="bg-white rounded-xl shadow-2xl border border-slate-200 p-12 md:p-16 animate-fade-in-up">
           <div className="text-center mb-10">
             <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Email Verification</h1>
             <p className="mt-3 text-slate-600 text-lg">Processing your verification request</p>

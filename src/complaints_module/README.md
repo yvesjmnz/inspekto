@@ -94,17 +94,39 @@ CREATE TABLE complaints (
 | Images | - | 10 files, 50MB each | No |
 | Documents | - | 5 files, 100MB each | No |
 
-## Next Steps (Phase 2)
+## Phase 3: Location-Based Authenticity
 
-- [ ] Email verification workflow
-- [ ] CAPTCHA protection
-- [ ] Authenticity calculation
-- [ ] Complaint tracking page
-- [ ] Email notifications
+Phase 3 adds a strict location-verification rule:
+
+- The app requests browser geolocation permission on form load.
+- It captures: latitude, longitude, accuracy radius, timestamp.
+- It compares the captured coordinates to the selected business’s registered coordinates.
+  - Within 200m: tag = `Location Verified`
+  - Over 200m: tag = `Failed Location Verification`
+
+### Database Schema (Phase 3 additions)
+
+```sql
+ALTER TABLE public.businesses
+  ADD COLUMN IF NOT EXISTS lat double precision NULL,
+  ADD COLUMN IF NOT EXISTS lng double precision NULL;
+
+ALTER TABLE public.complaints
+  ADD COLUMN IF NOT EXISTS business_pk integer NULL,
+  ADD COLUMN IF NOT EXISTS reporter_lat double precision NULL,
+  ADD COLUMN IF NOT EXISTS reporter_lng double precision NULL,
+  ADD COLUMN IF NOT EXISTS reporter_accuracy double precision NULL,
+  ADD COLUMN IF NOT EXISTS reporter_location_timestamp timestamptz NULL;
+```
+
+## Next Steps
+
+- [ ] Ensure every business record has registered `lat/lng` so proximity can be computed.
+- [ ] Consider an admin-only workflow for maintaining business records and coordinates.
 
 ## Notes
 
 - Phase 1 focuses on **simplicity** and **core functionality**
 - No authentication required for submission
-- Authenticity scoring deferred to Phase 2
-- Email verification deferred to Phase 2
+- Email verification is handled in Phase 2
+- Phase 3 requires registered business coordinates for deterministic verification
