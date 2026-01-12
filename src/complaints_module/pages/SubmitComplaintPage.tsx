@@ -58,17 +58,17 @@ export default function SubmitComplaintPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 border-b-4 border-blue-500 shadow-2xl">
-        <div className="w-full px-16 py-12 flex items-center gap-10">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      <header className="bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 border-b-4 border-amber-600 shadow-2xl">
+        <div className="w-full px-16 py-12 flex items-center gap-10 animate-fade-in">
           <img
             src="/logo.png"
             alt="Inspekto Logo"
-            className="h-32 w-32 object-contain drop-shadow-lg flex-shrink-0"
+            className="h-32 w-32 object-contain drop-shadow-lg flex-shrink-0 transform hover:scale-105 transition duration-300"
           />
           <div>
             <h1 className="text-6xl font-bold text-white tracking-tight drop-shadow-lg">Inspekto</h1>
-            <p className="mt-3 text-blue-100 text-xl font-light">Submit and manage your complaints</p>
+            <p className="mt-3 text-slate-300 text-xl font-light tracking-wide">Official Complaint Management System</p>
           </div>
         </div>
       </header>
@@ -76,61 +76,91 @@ export default function SubmitComplaintPage() {
       <main className="w-full px-8 py-16 flex justify-center">
         <div className="w-full max-w-3xl">
           {!canAccessForm ? (
-            <section className="bg-white rounded-2xl shadow-lg border border-slate-200 p-10">
-              <h2 className="text-3xl font-bold text-slate-900">Submit a complaint</h2>
-              <p className="mt-2 text-slate-600">
-                To protect reporters, we verify your email before allowing complaint submission.
-              </p>
+            <section className="bg-white rounded-xl shadow-2xl border border-slate-200 p-12 animate-fade-in-up">
+              <div className="mb-8 pb-8 border-b-2 border-slate-200">
+                <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Email Verification</h2>
+                <p className="mt-3 text-slate-600 text-lg">
+                  Verify your email address to proceed with complaint submission. This protects your identity and ensures secure communication.
+                </p>
+              </div>
 
-              <div className="mt-8">
-                <label className="block text-lg font-semibold text-slate-900 mb-3">Your email</label>
+              <div className="mt-10">
+                <label className="block text-base font-semibold text-slate-900 mb-4 uppercase tracking-wide">Email Address</label>
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full px-6 py-4 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-200 font-medium border-slate-300"
+                  placeholder="your.email@example.com"
+                  className="w-full px-6 py-4 border-2 border-slate-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition duration-300 font-medium bg-white hover:border-slate-400"
                 />
 
                 <button
                   onClick={requestVerification}
                   disabled={status.kind === 'sending'}
-                  className="mt-6 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg text-lg transition duration-200 shadow-sm hover:shadow-md"
+                  className="mt-8 w-full bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 disabled:from-slate-400 disabled:to-slate-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg text-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3"
                 >
-                  {status.kind === 'sending' ? 'Sending...' : 'Send verification link'}
+                  {status.kind === 'sending' ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending verification link...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      Send Verification Link
+                    </>
+                  )}
                 </button>
 
                 {status.kind === 'sent' && (
-                  <div className="mt-6 p-5 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-base text-blue-900 font-medium">
-                      Verification email sent. Check your inbox and click the link to continue.
-                    </p>
-                    <p className="mt-1 text-sm text-blue-800">
-                      If you do not see it, check spam. You can request another link after a short delay.
-                    </p>
+                  <div className="mt-8 p-6 bg-emerald-50 border-l-4 border-emerald-600 rounded-lg animate-slide-in-left shadow-md">
+                    <div className="flex gap-4">
+                      <svg className="h-6 w-6 text-emerald-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <div>
+                        <p className="text-base text-emerald-900 font-bold">Verification email sent</p>
+                        <p className="mt-2 text-sm text-emerald-800">
+                          Check your inbox for the verification link. If you don't see it within a few minutes, please check your spam folder.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {status.kind === 'error' && (
-                  <div className="mt-6 p-5 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-base text-red-800 font-medium">{status.message}</p>
+                  <div className="mt-8 p-6 bg-red-50 border-l-4 border-red-600 rounded-lg animate-slide-in-left shadow-md">
+                    <div className="flex gap-4">
+                      <svg className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <div>
+                        <p className="text-base text-red-900 font-bold">Verification failed</p>
+                        <p className="mt-1 text-sm text-red-800">{status.message}</p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
             </section>
           ) : (
-            <section>
-              <div className="mb-6 bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+            <section className="animate-fade-in-up">
+              <div className="mb-8 bg-white rounded-xl shadow-lg border border-slate-200 p-6 transform hover:shadow-xl transition duration-300">
                 <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm text-slate-600">Verified email</p>
-                    <p className="text-lg font-semibold text-slate-900 break-all">{verifiedEmail}</p>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Verified Email Address</p>
+                    <p className="text-xl font-bold text-slate-900 break-all mt-2">{verifiedEmail}</p>
                   </div>
                   <button
                     type="button"
                     onClick={clearVerification}
-                    className="text-sm font-semibold text-red-600 hover:text-red-700"
+                    className="text-sm font-bold text-slate-600 hover:text-slate-900 px-4 py-2 rounded-lg hover:bg-slate-100 transition duration-200 whitespace-nowrap"
                   >
-                    Use a different email
+                    Change Email
                   </button>
                 </div>
               </div>
