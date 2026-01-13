@@ -60,7 +60,7 @@ export default function SubmitComplaintPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex flex-col gap-8">
       <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 shadow-xl border-b border-slate-700">
         <div className="w-full px-6 sm:px-10 lg:px-16 py-10 sm:py-12 flex items-center gap-8 sm:gap-10 animate-fade-in">
           <img
