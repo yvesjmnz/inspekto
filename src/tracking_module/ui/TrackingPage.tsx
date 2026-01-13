@@ -1,6 +1,32 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getTrackingSummary } from '../service';
 import type { TrackingSummary } from '../types';
+
+function StatusBadge({ status }: { status: string }) {
+  const tone = useMemo(() => {
+    const s = status.toLowerCase();
+    if (s.includes('complete') || s.includes('resolved') || s.includes('transmitted')) return 'emerald';
+    if (s.includes('progress') || s.includes('inspect')) return 'amber';
+    if (s.includes('approve') || s.includes('review')) return 'sky';
+    return 'slate';
+  }, [status]);
+
+  const cls =
+    tone === 'emerald'
+      ? 'bg-emerald-50 border-emerald-600 text-emerald-900'
+      : tone === 'amber'
+        ? 'bg-amber-50 border-amber-600 text-amber-900'
+        : tone === 'sky'
+          ? 'bg-sky-50 border-sky-600 text-sky-900'
+          : 'bg-slate-50 border-slate-600 text-slate-900';
+
+  return (
+    <span className={`inline-flex items-center rounded-lg border-l-4 px-4 py-2 text-sm font-bold ${cls}`}>
+      {status || '—'}
+    </span>
+  );
+}
 
 export function TrackingPage() {
   const [trackingId, setTrackingId] = useState('');
@@ -12,54 +38,135 @@ export function TrackingPage() {
     e.preventDefault();
     setError(null);
     setResult(null);
+
     const id = trackingId.trim();
     if (!id) {
       setError('Please enter a tracking ID.');
       return;
     }
+
     setLoading(true);
     const summary = await getTrackingSummary(id);
     setLoading(false);
+
     if (!summary) {
       setError('Tracking ID not found.');
-    } else {
-      setResult(summary);
+      return;
     }
+
+    setResult(summary);
   }
 
   return (
-    <div className="max-w-xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Track Your Complaint</h1>
-      <form onSubmit={onSubmit} className="flex gap-2 mb-6">
-        <input
-          type="text"
-          placeholder="Enter Tracking ID"
-          value={trackingId}
-          onChange={(e) => setTrackingId(e.target.value)}
-          className="flex-1 border rounded px-3 py-2"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-60"
-        >
-          {loading ? 'Checking…' : 'Track'}
-        </button>
-      </form>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
+      <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 shadow-xl border-b border-slate-700">
+        <div className="w-full px-6 sm:px-10 lg:px-16 py-10 sm:py-12 flex items-center justify-between gap-8 sm:gap-10 animate-fade-in">
+          <Link
+            to="/"
+            className="flex items-center gap-8 sm:gap-10 focus:outline-none focus:ring-2 focus:ring-amber-500 rounded-lg"
+          >
+            <img
+              src="/logo.png"
+              alt="Inspekto Logo"
+              className="h-20 sm:h-24 lg:h-28 w-20 sm:w-24 lg:w-28 object-contain drop-shadow-lg flex-shrink-0 transform hover:scale-110 transition-transform duration-300"
+            />
+            <div className="flex-1">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">Inspekto</h1>
+              <p className="mt-2 text-slate-300 text-sm sm:text-base lg:text-lg font-medium tracking-wide">Tracking Portal</p>
+            </div>
+          </Link>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded mb-4">{error}</div>
-      )}
-
-      {result && (
-        <div className="border rounded p-4 space-y-2">
-          <div className="text-sm text-gray-600">Tracking ID</div>
-          <div className="font-mono">{result.trackingId}</div>
-
-          <div className="text-sm text-gray-600 mt-4">Current Status</div>
-          <div className="text-lg font-semibold">{result.status || '—'}</div>
+          <div className="hidden sm:flex items-center gap-3">
+            <Link
+              to="/complaints/submit"
+              className="text-sm font-bold text-slate-200 hover:text-white px-4 py-2 rounded-lg hover:bg-white/10 transition duration-200 whitespace-nowrap"
+            >
+              Submit Complaint
+            </Link>
+          </div>
         </div>
-      )}
+      </header>
+
+      <main className="w-full px-8 py-12 flex justify-center">
+        <div className="w-full max-w-6xl">
+          <section className="bg-white rounded-xl shadow-2xl border border-slate-200 p-10 md:p-12 animate-fade-in-up">
+            <div className="mb-8 pb-8 border-b-2 border-slate-200">
+              <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Track Your Complaint</h2>
+              <p className="mt-3 text-slate-600 text-lg">
+                Enter your Tracking ID to view the latest status as recorded in the system.
+              </p>
+            </div>
+
+            <form onSubmit={onSubmit} className="space-y-6">
+              <div>
+                <label className="block text-base font-semibold text-slate-900 mb-4 uppercase tracking-wide">Tracking ID</label>
+
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <input
+                    type="text"
+                    placeholder="Enter Tracking ID"
+                    value={trackingId}
+                    onChange={(e) => setTrackingId(e.target.value)}
+                    className="w-full flex-1 px-6 py-4 border-2 border-slate-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition duration-300 font-medium bg-white hover:border-slate-400"
+                  />
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full sm:w-auto bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 disabled:from-slate-400 disabled:to-slate-400 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3"
+                  >
+                    {loading ? 'Checking…' : 'Track'}
+                  </button>
+                </div>
+
+                <div className="mt-3 text-sm text-slate-600">
+                  The Tracking ID is the ID you received after submitting your complaint.
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-6 bg-red-50 border-l-4 border-red-600 rounded-lg animate-slide-in-left shadow-md">
+                  <div className="flex gap-4">
+                    <svg className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <div>
+                      <p className="text-base text-red-900 font-bold">Tracking failed</p>
+                      <p className="mt-1 text-sm text-red-800">{error}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </form>
+
+            {result && (
+              <div className="mt-10 bg-white rounded-xl shadow-lg border border-slate-200 p-8 md:p-10 transform hover:shadow-xl transition duration-300">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Tracking ID</p>
+                    <p className="text-xl font-bold text-slate-900 break-all mt-2 font-mono">{result.trackingId}</p>
+                  </div>
+
+                  <div className="md:text-right">
+                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Current Status</p>
+                    <div className="mt-3">
+                      <StatusBadge status={result.status} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 text-sm text-slate-600">
+                  Status is updated by the receiving office as the complaint progresses.
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
     </div>
   );
 }
