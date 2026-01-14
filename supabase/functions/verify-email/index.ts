@@ -58,7 +58,10 @@ Deno.serve(async (req) => {
   if (tokenErr) return json(500, { error: "Token lookup failed" });
   if (!tokenRow) return json(400, { error: "Invalid token" });
 
-  if (tokenRow.used_at) return json(400, { error: "Token already used" });
+  // Make the endpoint idempotent: if token already used, treat as success
+  if (tokenRow.used_at) {
+    return json(200, { success: true, email: tokenRow.email, complaintId: tokenRow.complaint_id ?? null });
+  }
 
   const expiresAt = new Date(tokenRow.expires_at);
   if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() < Date.now()) {

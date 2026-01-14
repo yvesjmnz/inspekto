@@ -667,9 +667,9 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
     <div
       ref={formTopRef}
       tabIndex={-1}
-      className="min-h-screen bg-gradient-to-b from-slate-100 via-white to-white focus:outline-none"
+      className="focus:outline-none"
     >
-      <div className="mx-auto w-full max-w-[1600px] px-16 py-16">
+      <div className="w-full">
         <div className="space-y-10 animate-fade-in-slow">
           <div className="rounded-3xl border border-slate-200 bg-white/95 backdrop-blur-sm p-10 shadow-lg-glow transition-all duration-500 ease-out hover:shadow-lg-glow animate-bounce-in">
             <StepHeader stepIndex={currentStepIndex} stepCount={FORM_STEPS.length} title={stepMeta.title} description={stepMeta.description} />
