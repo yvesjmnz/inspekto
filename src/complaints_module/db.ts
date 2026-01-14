@@ -91,10 +91,6 @@ export async function submitComplaint(formData: ComplaintFormData): Promise<Subm
             ? new Date(formData.location.timestamp).toISOString()
             : null,
 
-          // Optional pin support (may be null)
-          reporter_pin_lat: formData.pinnedLocation?.latitude ?? null,
-          reporter_pin_lng: formData.pinnedLocation?.longitude ?? null,
-
           // Certification
           certification_accepted: formData.certificationAccepted ?? false,
           certification_accepted_at: formData.certificationAccepted ? new Date().toISOString() : null,
