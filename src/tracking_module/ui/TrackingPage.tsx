@@ -1,5 +1,7 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Button } from '../../complaints_module/ui/Button';
+import { Alert } from '../../complaints_module/ui/Alert';
 import { getTrackingSummary } from '../service';
 import type { TrackingSummary } from '../types';
 
@@ -29,17 +31,14 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export function TrackingPage() {
+  const [searchParams] = useSearchParams();
   const [trackingId, setTrackingId] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TrackingSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setResult(null);
-
-    const id = trackingId.trim();
+  const lookup = async (idRaw: string) => {
+    const id = idRaw.trim();
     if (!id) {
       setError('Please enter a tracking ID.');
       return;
@@ -55,6 +54,23 @@ export function TrackingPage() {
     }
 
     setResult(summary);
+  };
+
+  useEffect(() => {
+    const id = (searchParams.get('id') || '').trim();
+    if (!id) return;
+    setTrackingId(id);
+    setError(null);
+    setResult(null);
+    void lookup(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setResult(null);
+    await lookup(trackingId);
   }
 
   return (
@@ -110,13 +126,9 @@ export function TrackingPage() {
                     className="w-full flex-1 px-6 py-4 border-2 border-slate-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition duration-300 font-medium bg-white hover:border-slate-400"
                   />
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full sm:w-auto bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 disabled:from-slate-400 disabled:to-slate-400 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3"
-                  >
+                  <Button type="submit" size="lg" disabled={loading}>
                     {loading ? 'Checking…' : 'Track'}
-                  </button>
+                  </Button>
                 </div>
 
                 <div className="mt-3 text-sm text-slate-600">
@@ -125,21 +137,7 @@ export function TrackingPage() {
               </div>
 
               {error && (
-                <div className="p-6 bg-red-50 border-l-4 border-red-600 rounded-lg animate-slide-in-left shadow-md">
-                  <div className="flex gap-4">
-                    <svg className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <div>
-                      <p className="text-base text-red-900 font-bold">Tracking failed</p>
-                      <p className="mt-1 text-sm text-red-800">{error}</p>
-                    </div>
-                  </div>
-                </div>
+                <Alert kind="error" title="Tracking failed" message={error} />
               )}
             </form>
 

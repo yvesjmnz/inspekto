@@ -178,6 +178,14 @@ body {
     animation: glow 2s ease-in-out infinite;
   }
 
+  .animate-float-up {
+    animation: float-up 0.5s ease-out;
+  }
+
+  .animate-rotate-in {
+    animation: rotate-in 0.4s ease-out;
+  }
+
   /* Custom scrollbar */
   .scrollbar-thin {
     scrollbar-width: thin;

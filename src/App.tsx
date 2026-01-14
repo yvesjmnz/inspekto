@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import LandingPage from './LandingPage'
 import SubmitComplaintPage from './complaints_module/pages/SubmitComplaintPage'
 import VerifyEmailPage from './complaints_module/pages/VerifyEmailPage'
+import ComplaintConfirmationPage from './complaints_module/pages/ComplaintConfirmationPage'
 import TrackingPage from './tracking_module/ui/TrackingPage'
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
 
         <Route path="/complaints/submit" element={<SubmitComplaintPage />} />
+        <Route path="/complaints/confirmation" element={<ComplaintConfirmationPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
 
         <Route path="/tracking" element={<TrackingPage />} />

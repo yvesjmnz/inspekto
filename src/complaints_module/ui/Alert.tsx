@@ -30,9 +30,9 @@ export function Alert({
           : 'text-blue-900';
 
   return (
-    <div className={cx('rounded-lg px-5 py-4 animate-slide-up transition-all duration-300', styles)} role="alert">
-      <div className={cx('text-sm font-semibold', titleStyles)}>{title}</div>
-      <div className="mt-1 text-sm leading-relaxed">{message}</div>
+    <div className={cx('rounded-2xl px-7 py-6 animate-slide-up transition-all duration-300 shadow-lg-glow', styles)} role="alert">
+      <div className={cx('text-lg font-bold', titleStyles)}>{title}</div>
+      <div className="mt-2 text-base leading-relaxed font-medium">{message}</div>
     </div>
   );
 }

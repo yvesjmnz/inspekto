@@ -192,6 +192,19 @@ serve(async (req) => {
       });
     }
 
+    // Persist resolved business coordinates for future lookups (best effort)
+    try {
+      await supabase
+        .from('businesses')
+        .update({
+          business_lat: coords.lat,
+          business_lng: coords.lng,
+        })
+        .eq('business_pk', businessPk);
+    } catch {
+      // Ignore persistence failures; proximity result can still be returned.
+    }
+
     const distance = haversineMeters(
       { latitude: reporterLat, longitude: reporterLng },
       { latitude: coords.lat, longitude: coords.lng }

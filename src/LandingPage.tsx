@@ -15,13 +15,15 @@ function OptionCard(props: {
       icon: 'bg-gradient-to-br from-blue-500 to-blue-600',
       border: 'hover:border-blue-300',
       text: 'text-blue-600',
-      bar: 'bg-gradient-to-r from-blue-500 to-blue-600'
+      bar: 'bg-gradient-to-r from-blue-500 to-blue-600',
+      ring: 'focus:ring-blue-500',
     },
     emerald: {
       icon: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
       border: 'hover:border-emerald-300',
       text: 'text-emerald-600',
-      bar: 'bg-gradient-to-r from-emerald-500 to-emerald-600'
+      bar: 'bg-gradient-to-r from-emerald-500 to-emerald-600',
+      ring: 'focus:ring-emerald-500',
     }
   };
 
@@ -30,7 +32,7 @@ function OptionCard(props: {
   return (
     <Link
       to={props.to}
-      className={`group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer border border-slate-200 ${colors.border} transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${props.color}-500`}
+      className={`group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 overflow-hidden cursor-pointer border border-slate-200 ${colors.border} focus:outline-none focus:ring-2 focus:ring-offset-2 ${colors.ring}`}
     >
       <div className="p-8">
         {/* Icon */}

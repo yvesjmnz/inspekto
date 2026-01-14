@@ -17,7 +17,7 @@ export function HelpText({
         : 'bg-amber-50 border border-amber-200 text-amber-900';
 
   return (
-    <div className={cx('rounded-lg px-4 py-3 text-sm leading-relaxed', styles)}>
+    <div className={cx('rounded-xl px-6 py-4 text-base leading-relaxed font-medium animate-fade-in', styles)}>
       {children}
     </div>
   );

@@ -14,17 +14,17 @@ export function Field({
   required?: boolean;
 }) {
   return (
-    <div className="transition-all duration-200">
+    <div className="transition-all duration-300 animate-float-up">
       <div className="flex items-baseline justify-between gap-3">
-        <label className="block text-sm font-semibold text-slate-800">
+        <label className="block text-lg font-bold text-slate-900">
           {label}
-          {!required && <span className="text-slate-500 font-normal"> (optional)</span>}
+          {!required && <span className="text-slate-500 font-normal text-base"> (optional)</span>}
         </label>
-        {hint && <div className="text-xs text-slate-500 font-medium">{hint}</div>}
+        {hint && <div className="text-sm text-slate-600 font-semibold">{hint}</div>}
       </div>
-      <div className="mt-2.5">{children}</div>
+      <div className="mt-3">{children}</div>
       {error && (
-        <div className="mt-2 text-sm text-red-700 font-semibold animate-slide-down">
+        <div className="mt-3 text-base text-red-700 font-bold animate-slide-down">
           {error}
         </div>
       )}
