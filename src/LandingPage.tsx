@@ -15,15 +15,13 @@ function OptionCard(props: {
       icon: 'bg-gradient-to-br from-blue-500 to-blue-600',
       border: 'hover:border-blue-300',
       text: 'text-blue-600',
-      bar: 'bg-gradient-to-r from-blue-500 to-blue-600',
-      ring: 'focus:ring-blue-500',
+      bar: 'bg-gradient-to-r from-blue-500 to-blue-600'
     },
     emerald: {
       icon: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
       border: 'hover:border-emerald-300',
       text: 'text-emerald-600',
-      bar: 'bg-gradient-to-r from-emerald-500 to-emerald-600',
-      ring: 'focus:ring-emerald-500',
+      bar: 'bg-gradient-to-r from-emerald-500 to-emerald-600'
     }
   };
 
@@ -32,7 +30,7 @@ function OptionCard(props: {
   return (
     <Link
       to={props.to}
-      className={`group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 overflow-hidden cursor-pointer border border-slate-200 ${colors.border} focus:outline-none focus:ring-2 focus:ring-offset-2 ${colors.ring}`}
+      className={`group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer border border-slate-200 ${colors.border} transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${props.color}-500`}
     >
       <div className="p-8">
         {/* Icon */}
@@ -74,7 +72,7 @@ function OptionCard(props: {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 flex flex-col">
       <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 shadow-xl border-b border-slate-700">
         <div className="max-w-6xl mx-auto px-8 py-10 sm:py-12 flex items-center gap-8 sm:gap-10 animate-fade-in">
           <img
@@ -91,56 +89,58 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="px-8 py-16">
+      <main className="flex-1 flex items-start justify-center py-8">
         {/* Welcome Section */}
-        <div className="text-center mb-16 animate-fade-in-up">
-          <h2 className="text-4xl font-bold text-slate-900 mb-4">
-            Welcome
-          </h2>
-          <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-            Choose an option below to submit a new complaint or track an existing one.
-          </p>
-        </div>
+        <div className="max-w-6xl mx-auto px-8">
+          <div className="text-center mb-16 animate-fade-in-up">
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+              Welcome
+            </h2>
+            <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+              Choose an option below to submit a new complaint or track an existing one.
+            </p>
+          </div>
 
-        {/* Action Cards - Using OptionCard pattern */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <OptionCard
-            to="/complaints/submit"
-            title="Submit Complaint"
-            description="File a new complaint and receive a Tracking ID for future updates."
-            icon={<FileText className="w-8 h-8 text-white" />}
-            color="blue"
-            note="Keep your Tracking ID safe—you'll need it to check status updates."
-          />
+          {/* Action Cards - Using OptionCard pattern */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <OptionCard
+              to="/complaints/submit"
+              title="Submit Complaint"
+              description="File a new complaint and receive a Tracking ID for future updates."
+              icon={<FileText className="w-8 h-8 text-white" />}
+              color="blue"
+              note="Keep your Tracking ID safe—you'll need it to check status updates."
+            />
 
-          <OptionCard
-            to="/tracking"
-            title="Tracking"
-            description="Enter your Tracking ID to view the current complaint status."
-            icon={<Search className="w-8 h-8 text-white" />}
-            color="emerald"
-            note=""
-          />
-        </div>
+            <OptionCard
+              to="/tracking"
+              title="Tracking"
+              description="Enter your Tracking ID to view the current complaint status."
+              icon={<Search className="w-8 h-8 text-white" />}
+              color="emerald"
+              note=""
+            />
+          </div>
 
-        {/* Additional Info Banner */}
-        <div className="mt-16 bg-gradient-to-r from-blue-50 to-slate-50 rounded-2xl border border-blue-100 p-8 shadow-md">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+          {/* Additional Info Banner */}
+          <div className="mt-16 bg-gradient-to-r from-blue-50 to-slate-50 rounded-2xl border border-blue-100 p-8 shadow-md">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
               </div>
-            </div>
-            <div>
-              <h4 className="font-semibold text-slate-900 mb-2">
-                How It Works
-              </h4>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Submit your complaint through our secure platform, receive a unique tracking ID, and monitor the progress of your case. 
-                All complaints are reviewed and processed according to regulatory standards.
-              </p>
+              <div>
+                <h4 className="font-semibold text-slate-900 mb-2">
+                  How It Works
+                </h4>
+                <p className="text-slate-600 text-sm leading-relaxed">
+                  Submit your complaint through our secure platform, receive a unique tracking ID, and monitor the progress of your case. 
+                  All complaints are reviewed and processed according to regulatory standards.
+                </p>
+              </div>
             </div>
           </div>
         </div>
