@@ -29,12 +29,12 @@ function formatDistanceMeters(value: number | undefined | null): string {
 type FormStep = 'business-info' | 'photo' | 'location' | 'complaint-details' | 'evidence' | 'review';
 
 const FORM_STEPS: Array<{ id: FormStep; title: string; description: string }> = [
-  { id: 'business-info', title: 'Business', description: 'Select the business.' },
-  { id: 'photo', title: 'Photo', description: 'Take one photo.' },
-  { id: 'location', title: 'Location', description: 'Confirm and verify location.' },
-  { id: 'complaint-details', title: 'Details', description: 'Describe what happened.' },
-  { id: 'evidence', title: 'Evidence', description: 'Optional uploads.' },
-  { id: 'review', title: 'Review', description: 'Submit your complaint.' },
+  { id: 'business-info', title: 'Business', description: '' },
+  { id: 'photo', title: 'Photo', description: '' },
+  { id: 'location', title: 'Location', description: '' },
+  { id: 'complaint-details', title: 'Details', description: '' },
+  { id: 'evidence', title: 'Evidence', description: '' },
+  { id: 'review', title: 'Review', description: '' },
 ];
 
 type BusinessLookupRow = {
@@ -131,6 +131,7 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
   const [verificationDistanceMeters, setVerificationDistanceMeters] = useState<number | null>(null);
+  const [hasRunLocationCheck, setHasRunLocationCheck] = useState(false);
 
   // Camera
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -157,6 +158,7 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [evidencePreviews, setEvidencePreviews] = useState<string[]>([]);
 
   const businessNameError = getFieldError(errors, 'businessName');
   const businessAddressError = getFieldError(errors, 'businessAddress');
@@ -164,40 +166,44 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
   const reporterEmailError = getFieldError(errors, 'reporterEmail');
   const imagesError = getFieldError(errors, 'images');
 
-  const requestDeviceLocation = () => {
+  const requestDeviceLocation = (): Promise<void> => {
     if (!('geolocation' in navigator)) {
       setLocationStatus({ kind: 'blocked', message: 'Geolocation is not supported by this browser.' });
-      return;
+      return Promise.resolve();
     }
 
     setLocationStatus({ kind: 'requesting' });
     setLocationError(null);
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const captured = {
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          accuracy: Number.isFinite(pos.coords.accuracy) ? pos.coords.accuracy : null,
-          timestamp: pos.timestamp,
-        };
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const captured = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            accuracy: Number.isFinite(pos.coords.accuracy) ? pos.coords.accuracy : null,
+            timestamp: pos.timestamp,
+          };
 
-        setFormData((prev) => ({ ...prev, location: captured }));
-        setLocationStatus({ kind: 'captured' });
-      },
-      (err) => {
-        const message =
-          err.code === err.PERMISSION_DENIED
-            ? 'Location permission was denied. Please enable it in your browser settings.'
-            : err.code === err.POSITION_UNAVAILABLE
-              ? 'Location is unavailable. Please try again.'
-              : 'Location request timed out. Please try again.';
+          setFormData((prev) => ({ ...prev, location: captured }));
+          setLocationStatus({ kind: 'captured' });
+          resolve();
+        },
+        (err) => {
+          const message =
+            err.code === err.PERMISSION_DENIED
+              ? 'Location permission was denied. Please enable it in your browser settings.'
+              : err.code === err.POSITION_UNAVAILABLE
+                ? 'Location is unavailable. Please try again.'
+                : 'Location request timed out. Please try again.';
 
-        setLocationStatus({ kind: 'blocked', message });
-        setLocationError(message);
-      },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-    );
+          setLocationStatus({ kind: 'blocked', message });
+          setLocationError(message);
+          resolve();
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      );
+    });
   };
 
   useEffect(() => {
@@ -411,7 +417,7 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
 
   const verifyBusinessProximity = async () => {
     if (!formData.location) {
-      setVerificationMessage('Location not available. Refresh and try again.');
+      setVerificationMessage('Location not available.');
       setFormData((prev) => ({ ...prev, locationVerificationTag: 'Failed Location Verification' }));
       return;
     }
@@ -424,6 +430,7 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
 
     setIsVerifying(true);
     setVerificationMessage(null);
+    setHasRunLocationCheck(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('verify-business-proximity', {
@@ -458,12 +465,12 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
       setFormData((prev) => ({ ...prev, locationVerificationTag: tag }));
 
       if (tag === 'Location Verified') {
-        setVerificationMessage(distance != null ? `Verified. Estimated distance: ${Math.round(distance)}m.` : 'Verified.');
+        setVerificationMessage(distance != null ? `You appear to be near the business (about ${Math.round(distance)}m).` : 'You appear to be near the business.');
       } else {
         setVerificationMessage(
           distance != null
-            ? `Location may be far. Estimated distance: ${Math.round(distance)}m. You may continue, but it will be flagged.`
-            : 'Location may be far. You may continue, but it will be flagged.'
+            ? `You appear to be far from the business (about ${Math.round(distance)}m). This could affect how your complaint is reviewed.`
+            : 'You appear to be far from the business. This could affect how your complaint is reviewed.'
         );
       }
     } finally {
@@ -650,6 +657,9 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
       images: [...(prev.images || []), ...list],
     }));
 
+    // Store local preview URLs for the newly added files.
+    setEvidencePreviews((prev) => [...prev, ...list.map((f) => URL.createObjectURL(f))]);
+
     setErrors((prev) => prev.filter((e) => e.field !== type));
   };
 
@@ -671,94 +681,144 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
             {/* Step 1: Business */}
             {currentStep === 'business-info' && (
               <div className="space-y-6 animate-slide-up">
-                <Panel title="Select business" subtitle="Search and choose the establishment you are reporting.">
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <div className="lg:col-span-7">
-                      <Field label="Business name" hint="Type at least 2 characters" error={businessNameError}>
-                        <input
-                          data-field="businessName"
-                          value={businessSearch}
-                          onChange={(e) => setBusinessSearch(e.target.value)}
-                          placeholder="Search business name"
-                          autoComplete="off"
-                          className={cx(
-                            'w-full rounded-xl border px-5 py-4 text-lg outline-none transition',
-                            businessNameError ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white',
-                            'focus:ring-4 focus:ring-slate-100 focus:border-slate-400'
-                          )}
-                        />
-                      </Field>
-
-                      {(isBusinessSearching || businessResults.length > 0) && (
-                        <div className="mt-3 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                          {isBusinessSearching ? (
-                            <div className="p-4 text-sm text-slate-600">Searching…</div>
-                          ) : (
-                            <ul className="max-h-72 overflow-auto">
-                              {businessResults.map((b) => (
-                                <li key={b.business_pk}>
-                                  <button
-                                    type="button"
-                                    className="w-full text-left px-4 py-3 hover:bg-slate-50 transition focus:outline-none focus:bg-slate-50"
-                                    onClick={() => {
-                                      setSelectedBusiness(b)
-                                      setBusinessSearch(b.business_name || '')
-                                      setBusinessResults([])
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        businessPk: b.business_pk,
-                                        businessName: b.business_name || '',
-                                        businessAddress: b.business_address || '',
-                                        locationVerificationTag: undefined,
-                                      }))
-                                      setVerificationMessage(null)
-                                      setVerificationDistanceMeters(null)
-                                      setErrors((prev) => prev.filter((e) => e.field !== 'businessName'))
-                                    }}
-                                  >
-                                    <div className="text-sm font-semibold text-slate-900">{b.business_name || 'Unnamed business'}</div>
-                                    <div className="text-xs text-slate-600 mt-1">{b.business_address || 'No address on file'}</div>
-                                  </button>
-                                </li>
-                              ))}
-                              {businessResults.length === 0 && (
-                                <li className="p-4 text-sm text-slate-600">No matches found.</li>
-                              )}
-                            </ul>
-                          )}
-                        </div>
-                      )}
+                <Panel title="Choose a business" subtitle="Search and select one match.">
+                  <div className="space-y-5">
+                    <div className="border border-blue-200 bg-blue-50 px-5 py-3 text-sm text-blue-900">
+                      Start typing the business name, then select it from the list.
                     </div>
 
-                    <div className="lg:col-span-5">
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                        <div className="text-xs font-semibold text-slate-600 uppercase">Selected business</div>
-                        <div className="mt-2 text-base font-semibold text-slate-900">
-                          {selectedBusiness?.business_name || 'None selected'}
-                        </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                      <div className="lg:col-span-7">
+                        <Field label="Business" hint="Type at least 2 characters" error={businessNameError}>
+                          <div className="relative">
+                            <input
+                              data-field="businessName"
+                              value={businessSearch}
+                              onChange={(e) => {
+                                setBusinessSearch(e.target.value)
+                                if (!e.target.value.trim()) {
+                                  setSelectedBusiness(null)
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    businessPk: undefined,
+                                    businessName: '',
+                                    businessAddress: '',
+                                    locationVerificationTag: undefined,
+                                  }))
+                                }
+                              }}
+                              placeholder="Search by business name"
+                              autoComplete="off"
+                              aria-label="Business search"
+                              className={cx(
+                                'w-full border px-5 py-4 text-lg outline-none transition',
+                                businessNameError ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white',
+                                'focus:ring-4 focus:ring-blue-100 focus:border-blue-300'
+                              )}
+                            />
 
-                        <div className="mt-4">
-                          <div className="text-xs font-semibold text-slate-600 uppercase">Business address (read-only)</div>
-                          <div className="mt-2 text-sm text-slate-800 whitespace-pre-wrap">
-                            {formData.businessAddress || 'Select a business to view its registered address.'}
+                            {(isBusinessSearching || businessResults.length > 0) && (
+                              <div
+                                role="listbox"
+                                className="absolute z-10 mt-2 w-full border border-slate-200 bg-white overflow-hidden shadow-lg"
+                              >
+                                {isBusinessSearching ? (
+                                  <div className="p-4 text-sm text-slate-600">Searching…</div>
+                                ) : businessResults.length === 0 ? (
+                                  <div className="p-4 text-sm text-slate-600">No matches found.</div>
+                                ) : (
+                                  <ul className="max-h-80 overflow-auto">
+                                    {businessResults.map((b) => (
+                                      <li key={b.business_pk}>
+                                        <button
+                                          type="button"
+                                          role="option"
+                                          className="w-full text-left px-5 py-4 hover:bg-blue-50 transition focus:outline-none focus:bg-blue-50"
+                                          onClick={() => {
+                                            setSelectedBusiness(b)
+                                            setBusinessSearch(b.business_name || '')
+                                            setBusinessResults([])
+                                            setFormData((prev) => ({
+                                              ...prev,
+                                              businessPk: b.business_pk,
+                                              businessName: b.business_name || '',
+                                              businessAddress: b.business_address || '',
+                                              locationVerificationTag: undefined,
+                                            }))
+                                            setVerificationMessage(null)
+                                            setVerificationDistanceMeters(null)
+                                            setErrors((prev) => prev.filter((e) => e.field !== 'businessName'))
+                                          }}
+                                        >
+                                          <div className="text-base font-semibold text-slate-900">
+                                            {b.business_name || 'Unnamed business'}
+                                          </div>
+                                          <div className="text-sm text-slate-600 mt-1">
+                                            {b.business_address || 'No address on file'}
+                                          </div>
+                                        </button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          {businessAddressError && <div className="mt-2 text-sm text-red-700 font-semibold">{businessAddressError}</div>}
+                        </Field>
+                      </div>
+
+                      <div className="lg:col-span-5">
+                        <div className="border border-slate-200 bg-white p-6">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <div className="text-xs font-semibold text-slate-600 uppercase tracking-widest">Selected</div>
+                              <div className="mt-2 text-lg font-bold text-slate-900 break-words">
+                                {selectedBusiness?.business_name || 'No business selected'}
+                              </div>
+                            </div>
+
+                            {selectedBusiness && (
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={() => {
+                                  setSelectedBusiness(null)
+                                  setBusinessSearch('')
+                                  setBusinessResults([])
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    businessPk: undefined,
+                                    businessName: '',
+                                    businessAddress: '',
+                                    locationVerificationTag: undefined,
+                                  }))
+                                }}
+                              >
+                                Clear
+                              </Button>
+                            )}
+                          </div>
+
+                          <div className="mt-5">
+                            <div className="text-xs font-semibold text-slate-600 uppercase tracking-widest">Address</div>
+                            <div className="mt-2 text-sm text-slate-800 whitespace-pre-wrap break-words">
+                              {formData.businessAddress || 'Select a business to view its address.'}
+                            </div>
+                            {businessAddressError && (
+                              <div className="mt-3 text-sm text-red-700 font-semibold">{businessAddressError}</div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </Panel>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="text-sm font-semibold text-slate-900">Before you continue</div>
-                  <ul className="mt-2 list-disc pl-5 text-sm text-slate-700 space-y-1">
-                    <li>Select a business from the list so we capture the correct address.</li>
-                  </ul>
-                </div>
-
                 <div className="flex justify-between">
                   <div />
-                  <Button type="button" size="lg" onClick={handleNextStep}>Continue</Button>
+                  <Button type="button" size="lg" onClick={handleNextStep} disabled={!formData.businessPk}>
+                    Continue
+                  </Button>
                 </div>
               </div>
             )}
@@ -766,8 +826,12 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
             {/* Step 2: Photo */}
             {currentStep === 'photo' && (
               <div className="space-y-6 animate-slide-up">
-                <Panel title="Take a photo" subtitle="One clear photo is required.">
+                <Panel title="Take a photo" subtitle="Take one photo to continue.">
                   <div className="space-y-4">
+                    <div className="border border-blue-200 bg-blue-50 px-5 py-3 text-sm text-blue-900">
+                      Open the camera, take one photo, then continue.
+                    </div>
+
                     <div className="flex flex-wrap items-center gap-3">
                       <Button type="button" size="lg" onClick={() => void openCamera()} disabled={cameraState.kind === 'starting'}>
                         {cameraState.kind === 'starting'
@@ -776,7 +840,9 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
                             ? 'Camera ready'
                             : cameraState.kind === 'open'
                               ? 'Connecting…'
-                              : 'Open camera'}
+                              : imagePreview
+                                ? 'Retake photo'
+                                : 'Open camera'}
                       </Button>
 
                       {(cameraState.kind === 'open' || cameraState.kind === 'ready') && (
@@ -796,32 +862,42 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
                       <Alert kind="error" title="Camera" message={cameraState.message} />
                     )}
 
-                    {(cameraState.kind === 'open' || cameraState.kind === 'ready') && (
-                      <div className="rounded-2xl border border-slate-200 overflow-hidden bg-black/95">
-                        <video ref={videoRef} className="w-full h-80 object-contain" playsInline muted autoPlay />
-                      </div>
-                    )}
+                    <div className="border border-slate-200 bg-slate-50 overflow-hidden">
+                      <canvas ref={canvasRef} className="hidden" />
 
-                    <canvas ref={canvasRef} className="hidden" />
-
-                    {(cameraState.kind === 'open' || cameraState.kind === 'ready') && (
-                      <div className="flex flex-wrap gap-3">
-                        <Button type="button" size="lg" onClick={capturePhoto} disabled={cameraState.kind !== 'ready'}>
-                          Take photo
-                        </Button>
-                        <Button type="button" variant="secondary" size="lg" onClick={stopCamera}>
-                          Stop
-                        </Button>
-                      </div>
-                    )}
+                      {(cameraState.kind === 'open' || cameraState.kind === 'ready') ? (
+                        <div className="bg-black">
+                          <video ref={videoRef} className="w-full h-96 object-contain bg-black" playsInline muted autoPlay />
+                          <div className="border-t border-slate-800 bg-slate-950 px-4 py-3 text-white flex flex-wrap gap-3 items-center justify-between">
+                            <div className="text-sm font-semibold">
+                              {cameraState.kind === 'ready' ? 'Ready to take photo' : 'Connecting…'}
+                            </div>
+                            <div className="flex flex-wrap gap-3">
+                              <Button type="button" size="lg" onClick={capturePhoto} disabled={cameraState.kind !== 'ready'}>
+                                Take photo
+                              </Button>
+                              <Button type="button" variant="secondary" size="lg" onClick={stopCamera}>
+                                Stop
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : imagePreview ? (
+                        <div>
+                          <img src={imagePreview} alt="Uploaded evidence" className="w-full h-96 object-cover" />
+                          <div className="border-t border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                            Photo saved.
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-8">
+                          <div className="text-sm font-semibold text-slate-900">No photo yet</div>
+                          <div className="mt-2 text-sm text-slate-700">Press Open camera to begin.</div>
+                        </div>
+                      )}
+                    </div>
 
                     {imagesError && <div className="text-sm text-red-700 font-semibold">{imagesError}</div>}
-
-                    {imagePreview && (
-                      <div className="rounded-2xl border border-slate-200 overflow-hidden">
-                        <img src={imagePreview} alt="Uploaded evidence" className="w-full h-80 object-cover" />
-                      </div>
-                    )}
                   </div>
                 </Panel>
 
@@ -837,90 +913,92 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
             {/* Step 3: Location */}
             {currentStep === 'location' && (
               <div className="space-y-6 animate-slide-up">
-                <Panel title="Location" subtitle="Confirm and verify.">
-                  <div className="space-y-4">
+                <Panel title="Location" subtitle="Confirm you are where your device says you are.">
+                  <div className="space-y-5">
+                    <div className="border border-blue-200 bg-blue-50 px-5 py-3 text-sm text-blue-900">
+                      Press Check my location. If you are far from the business, it may affect review.
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                       <div className="lg:col-span-7">
-                        <div className="rounded-2xl border border-slate-200 overflow-hidden bg-slate-50">
-                        {formData.location ? (
-                          <img
-                            alt="Map preview"
-                            className="w-full h-80 object-cover"
-                            src={(() => {
-                              const userLat = formData.location?.latitude;
-                              const userLng = formData.location?.longitude;
-                              const bizLat = selectedBusiness?.business_lat;
-                              const bizLng = selectedBusiness?.business_lng;
+                        <div className="border border-slate-200 overflow-hidden bg-slate-50">
+                          {hasRunLocationCheck && formData.location ? (
+                            <iframe
+                              title="Map preview"
+                              className="w-full h-80"
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                              src={(() => {
+                                const userLat = formData.location?.latitude;
+                                const userLng = formData.location?.longitude;
 
-                              // Use a free static OSM preview with multiple markers.
-                              // Note: business marker appears once coords are available.
-                              const base = 'https://staticmap.openstreetmap.de/staticmap.php';
-                              const size = '800x420';
+                                const pad = 0.01;
 
-                              const markers: string[] = [];
-                              markers.push(`markers=${encodeURIComponent(`${userLat},${userLng},blue-pushpin`)}`);
-                              if (typeof bizLat === 'number' && typeof bizLng === 'number') {
-                                markers.push(`markers=${encodeURIComponent(`${bizLat},${bizLng},red-pushpin`)}`);
-                              }
-
-                              return `${base}?size=${size}&maptype=mapnik&zoom=15&${markers.join('&')}`;
-                            })()}
-                          />
-                        ) : (
-                          <div className="p-6 text-slate-700">Location not available.</div>
-                        )}
-                      </div>
-                      <div className="mt-3 text-sm text-slate-600">
-                        Blue: you. Red: business.
-                      </div>
-                      </div>
-
-                      <div className="lg:col-span-5 space-y-4">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="text-sm text-slate-700">
-                            <div className="font-semibold text-slate-900">Device location</div>
-                            {locationStatus.kind === 'requesting' && <div className="mt-1">Requesting…</div>}
-                            {locationStatus.kind === 'captured' && (
-                              <div className="mt-1">
-                                {formatGeo(formData.location?.latitude)}, {formatGeo(formData.location?.longitude)}
-                                {formData.location?.accuracy != null && (
-                                  <span className="text-slate-500"> ({formatAccuracyMeters(formData.location?.accuracy)})</span>
-                                )}
-                              </div>
-                            )}
-                            {locationStatus.kind === 'blocked' && (
-                              <div className="mt-1 text-red-700 font-semibold">{locationStatus.message}</div>
-                            )}
-                            {locationError && <div className="mt-1 text-red-700 font-semibold">{locationError}</div>}
-                          </div>
-
-                          <Button type="button" variant="secondary" onClick={requestDeviceLocation}>
-                            Refresh
-                          </Button>
+                                const bbox = `${(userLng - pad).toFixed(6)},${(userLat - pad).toFixed(6)},${(userLng + pad).toFixed(6)},${(userLat + pad).toFixed(6)}`;
+                                return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${userLat},${userLng}`;
+                              })()}
+                            />
+                          ) : (
+                            <div className="p-8 text-slate-700">
+                              <div className="text-sm font-semibold text-slate-900">Map preview</div>
+                              <div className="mt-2 text-sm text-slate-700">Press Check my location to load the map.</div>
+                            </div>
+                          )}
                         </div>
 
-                        <Button
-                          type="button"
-                          size="lg"
-                          disabled={isVerifying || !selectedBusiness?.business_pk || !formData.location}
-                          onClick={verifyBusinessProximity}
-                        >
-                          {isVerifying ? 'Verifying…' : 'Run verification'}
-                        </Button>
+                        <div className="mt-3 border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                          <span className="font-semibold">Map:</span> This shows the location reported by your device.
+                        </div>
+                      </div>
 
-                        {verificationMessage && (
-                          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <div className="text-sm font-semibold text-slate-900">Result</div>
-                            <div className="mt-1 text-sm text-slate-800">{verificationMessage}</div>
-                            {typeof verificationDistanceMeters === 'number' && (
-                              <div className="mt-1 text-sm text-slate-700">Distance: {formatDistanceMeters(verificationDistanceMeters)}</div>
-                            )}
+                      <div className="lg:col-span-5">
+                        <div className="border border-slate-200 bg-white p-5 space-y-4">
+                          <div className="text-sm text-slate-700">
+                            {locationStatus.kind === 'requesting' && 'Asking for location permission…'}
+                            {locationStatus.kind === 'captured' && 'Location received.'}
+                            {locationStatus.kind === 'blocked' && (locationStatus.message || 'Location is blocked in your browser settings.')}
+                            {locationStatus.kind === 'idle' && 'Waiting for location.'}
                           </div>
-                        )}
 
-                        {formData.locationVerificationTag === 'Failed Location Verification' && (
-                          <Alert kind="warning" title="Flagged" message="This complaint will be flagged." />
-                        )}
+                          {locationError && <div className="text-sm text-red-700 font-semibold">{locationError}</div>}
+
+                          <div className="flex items-center gap-3">
+                            <Button
+                              type="button"
+                              size="lg"
+                              disabled={isVerifying || !selectedBusiness?.business_pk}
+                              onClick={async () => {
+                                await requestDeviceLocation();
+                                await verifyBusinessProximity();
+                              }}
+                            >
+                              {isVerifying ? 'Checking…' : 'Check my location'}
+                            </Button>
+                          </div>
+
+                          {(formData.locationVerificationTag || verificationMessage) && (
+                            <Alert
+                              kind={formData.locationVerificationTag === 'Failed Location Verification' ? 'warning' : 'success'}
+                              title={
+                                formData.locationVerificationTag === 'Failed Location Verification'
+                                  ? 'You appear far from the business'
+                                  : 'Location looks close to the business'
+                              }
+                              message={(() => {
+                                const distanceText =
+                                  typeof verificationDistanceMeters === 'number'
+                                    ? `Estimated distance: ${formatDistanceMeters(verificationDistanceMeters)}.`
+                                    : '';
+
+                                if (formData.locationVerificationTag === 'Failed Location Verification') {
+                                  return `${distanceText} You can still continue, but being far away may affect how your complaint is reviewed.`.trim();
+                                }
+
+                                return distanceText || 'You can continue.';
+                              })()}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -938,61 +1016,72 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
             {/* Step 3: Complaint details */}
             {currentStep === 'complaint-details' && (
               <div className="space-y-6 animate-slide-up">
-                <Panel title="Complaint details" subtitle="Describe what happened in your own words.">
-                  <div className="space-y-8">
-                    <Field label="What happened?" hint="Minimum 20 characters" error={complaintDescriptionError}>
-                      <div className="space-y-2">
-                        <textarea
-                          data-field="complaintDescription"
-                          value={formData.complaintDescription || ''}
-                          onChange={(e) => {
-                            setFormData((prev) => ({ ...prev, complaintDescription: e.target.value }));
-                            setErrors((prev) => prev.filter((err) => err.field !== 'complaintDescription'));
-                          }}
-                          rows={10}
-                          placeholder="Describe what happened"
-                          className={cx(
-                            'w-full rounded-xl border px-5 py-4 text-lg outline-none resize-none transition',
-                            complaintDescriptionError ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white',
-                            'focus:ring-4 focus:ring-slate-100 focus:border-slate-400'
-                          )}
-                        />
-                        <div className="flex justify-end">
-                          <div className="text-sm font-medium text-slate-600 bg-slate-50 px-4 py-2 rounded-lg animate-fade-in">
-                            {(formData.complaintDescription || '').length} characters
-                          </div>
+                <Panel title="Complaint details" subtitle="Enter the details we should review.">
+                  <div className="space-y-5">
+                    <div className="border border-blue-200 bg-blue-50 px-5 py-3 text-sm text-blue-900">
+                      Keep it short and factual.
+                    </div>
+
+                    <div className="border border-slate-200 bg-white overflow-hidden">
+                      <div className="p-5">
+                        <Field label="What happened?" hint="Minimum 20 characters" error={complaintDescriptionError}>
+                          <textarea
+                            data-field="complaintDescription"
+                            value={formData.complaintDescription || ''}
+                            onChange={(e) => {
+                              setFormData((prev) => ({ ...prev, complaintDescription: e.target.value }));
+                              setErrors((prev) => prev.filter((err) => err.field !== 'complaintDescription'));
+                            }}
+                            rows={9}
+                            placeholder="Write a short description"
+                            className={cx(
+                              'w-full border px-5 py-4 text-lg outline-none resize-none transition',
+                              complaintDescriptionError ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white',
+                              'focus:ring-4 focus:ring-blue-100 focus:border-blue-300'
+                            )}
+                          />
+                        </Field>
+                      </div>
+
+                      <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-xs text-slate-600 break-words">Include what you saw, and when it happened.</div>
+                        <div className="text-xs font-semibold text-slate-700 whitespace-nowrap">
+                          {(formData.complaintDescription || '').length} characters
                         </div>
                       </div>
-                    </Field>
+                    </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      <Field label="Your email" error={reporterEmailError}>
-                        <input
-                          data-field="reporterEmail"
-                          type="email"
-                          value={formData.reporterEmail || ''}
-                          autoComplete="email"
-                          inputMode="email"
-                          onChange={(e) => {
-                            setFormData((prev) => ({ ...prev, reporterEmail: e.target.value }));
-                            setErrors((prev) => prev.filter((err) => err.field !== 'reporterEmail'));
-                          }}
-                          placeholder="name@example.com"
-                          className={cx(
-                            'w-full rounded-xl border px-5 py-4 text-lg outline-none transition',
-                            reporterEmailError ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white',
-                            'focus:ring-4 focus:ring-slate-100 focus:border-slate-400'
-                          )}
-                        />
-                      </Field>
-
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 animate-scale-in flex flex-col justify-center">
-                        <div className="text-xs font-semibold text-slate-600 uppercase">Privacy</div>
-                        <div className="mt-2 text-sm text-slate-800 leading-relaxed">
-                          Your email is used to verify your complaint submission and for updates related to this report.
+                    <div className="border border-slate-200 bg-white p-5">
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        <div className="lg:col-span-7">
+                          <Field label="Your email" error={reporterEmailError}>
+                            <input
+                              data-field="reporterEmail"
+                              type="email"
+                              value={formData.reporterEmail || ''}
+                              autoComplete="email"
+                              inputMode="email"
+                              onChange={(e) => {
+                                setFormData((prev) => ({ ...prev, reporterEmail: e.target.value }));
+                                setErrors((prev) => prev.filter((err) => err.field !== 'reporterEmail'));
+                              }}
+                              placeholder="name@example.com"
+                              className={cx(
+                                'w-full border px-5 py-4 text-lg outline-none transition',
+                                reporterEmailError ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white',
+                                'focus:ring-4 focus:ring-blue-100 focus:border-blue-300'
+                              )}
+                            />
+                          </Field>
                         </div>
-                        <div className="mt-3 text-xs text-slate-600">
-                          If you do not have an email, ask a friend or family member for help.
+
+                        <div className="lg:col-span-5">
+                          <div className="border border-blue-200 bg-blue-50 px-4 py-3 overflow-hidden">
+                            <div className="text-xs font-semibold text-blue-900 uppercase tracking-widest break-words">Why we ask</div>
+                            <div className="mt-2 text-sm text-blue-900/90 leading-relaxed break-words">
+                              We use your email to confirm your submission and send updates.
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1009,17 +1098,69 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
             {/* Step 4: Evidence */}
             {currentStep === 'evidence' && (
               <div className="space-y-6 animate-slide-up">
-                <Panel title="Additional photos" subtitle="Optional: add extra photos to support your complaint.">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Field label="Additional photos" error={imagesError} required={false}>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={(e) => handleEvidenceFiles('images', e.target.files)}
-                        className="block w-full text-sm text-slate-700"
-                      />
-                    </Field>
+                <Panel title="Additional photos" subtitle="Optional">
+                  <div className="space-y-5">
+                    <div className="border border-blue-200 bg-blue-50 px-5 py-3 text-sm text-blue-900">
+                      Add extra photos only if they help explain the issue.
+                    </div>
+
+                    <div className="border border-slate-200 bg-white rounded-3xl p-5 space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="text-sm text-slate-700">
+                          {((formData.images || []).length > 1)
+                            ? `${(formData.images || []).length} files selected.`
+                            : ((formData.images || []).length === 1)
+                              ? '1 file selected.'
+                              : 'No files selected.'}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3">
+                          <input
+                            id="additional-photos"
+                            type="file"
+                            multiple
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(e) => handleEvidenceFiles('images', e.target.files)}
+                            className="hidden"
+                          />
+                          <label htmlFor="additional-photos" className="inline-flex">
+                            <Button type="button" size="lg">Choose files</Button>
+                          </label>
+
+                          {(formData.images || []).length > 1 && (
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              onClick={() => {
+                                // Reset optional evidence photos only (keep the required first photo if present).
+                                const keep = (formData.images || []).slice(0, 1);
+                                setFormData((prev) => ({ ...prev, images: keep }));
+                                for (const url of evidencePreviews) URL.revokeObjectURL(url);
+                                setEvidencePreviews([]);
+                              }}
+                            >
+                              Clear extra photos
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-slate-600">Accepted: JPG, PNG, WEBP</div>
+
+                      {evidencePreviews.length > 0 && (
+                        <div className="border-t border-slate-200 pt-4">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {evidencePreviews.map((src, idx) => (
+                              <div key={src + idx} className="border border-slate-200 bg-slate-50 rounded-xl overflow-hidden">
+                                <img src={src} alt="Selected" className="w-full h-28 object-cover" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {imagesError && <div className="text-sm text-red-700 font-semibold">{imagesError}</div>}
+                    </div>
                   </div>
                 </Panel>
 
@@ -1033,45 +1174,64 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
             {/* Step 5: Review */}
             {currentStep === 'review' && (
               <div className="space-y-6 animate-slide-up">
-                <Panel title="Review" subtitle="Please confirm the information below.">
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <div className="lg:col-span-6 rounded-2xl border border-slate-200 bg-white p-5 animate-scale-in">
-                      <div className="text-xs font-semibold text-slate-600 uppercase">Business</div>
-                      <div className="mt-2 text-base font-semibold text-slate-900">{formData.businessName}</div>
-                      <div className="mt-2 text-sm text-slate-700 whitespace-pre-wrap">{formData.businessAddress}</div>
-                      <div className="mt-3 text-sm text-slate-700">
-                        Location tag: <span className="font-semibold">{formData.locationVerificationTag || 'Not available'}</span>
-                      </div>
+                <Panel title="Review" subtitle="Make sure the information below is correct.">
+                  <div className="space-y-5">
+                    <div className="border border-blue-200 bg-blue-50 rounded-2xl px-5 py-3 text-sm text-blue-900">
+                      If you need to change something, press Back.
                     </div>
 
-                    <div className="lg:col-span-6 rounded-2xl border border-slate-200 bg-white p-5 animate-scale-in">
-                      <div className="text-xs font-semibold text-slate-600 uppercase">Complaint</div>
-                      <div className="mt-2 text-sm text-slate-800 whitespace-pre-wrap">{formData.complaintDescription}</div>
-                      <div className="mt-3 text-sm text-slate-700">
-                        Email: <span className="font-semibold">{formData.reporterEmail}</span>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                      <div className="lg:col-span-6 border border-slate-200 bg-white rounded-3xl p-5">
+                        <div className="text-xs font-semibold text-slate-600 uppercase">Business</div>
+                        <div className="mt-3 space-y-3">
+                          <div>
+                            <div className="text-xs font-semibold text-slate-500 uppercase">Name</div>
+                            <div className="mt-1 text-sm font-semibold text-slate-900 break-words">{formData.businessName}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs font-semibold text-slate-500 uppercase">Address</div>
+                            <div className="mt-1 text-sm text-slate-700 whitespace-pre-wrap break-words">{formData.businessAddress}</div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="lg:col-span-12 rounded-2xl border border-slate-200 bg-slate-50 p-5 animate-scale-in">
-                      <div className="text-xs font-semibold text-slate-600 uppercase">Certification</div>
-                      <HelpText>This step helps reduce false reports.</HelpText>
-                      <label className="mt-3 flex items-start gap-3">
-                        <input
-                          type="checkbox"
-                          checked={!!formData.certificationAccepted}
-                          onChange={(e) => {
-                            setFormData((prev) => ({ ...prev, certificationAccepted: e.target.checked }));
-                            setErrors((prev) => prev.filter((err) => err.field !== 'reporterEmail'));
-                          }}
-                          className="mt-1 h-5 w-5"
-                        />
-                        <span className="text-sm text-slate-800 leading-relaxed">
-                          I certify that all the information I entered is true and the falsification may result in the non-acceptance of the complaint.
-                        </span>
-                      </label>
-                      {!formData.certificationAccepted && (
-                        <div className="mt-2 text-sm text-slate-600">You must certify before submitting.</div>
-                      )}
+                      <div className="lg:col-span-6 border border-slate-200 bg-white rounded-3xl p-5">
+                        <div className="text-xs font-semibold text-slate-600 uppercase">Your report</div>
+                        <div className="mt-3 space-y-3">
+                          <div>
+                            <div className="text-xs font-semibold text-slate-500 uppercase">Description</div>
+                            <div className="mt-1 text-sm text-slate-800 whitespace-pre-wrap break-words">{formData.complaintDescription}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs font-semibold text-slate-500 uppercase">Email</div>
+                            <div className="mt-1 text-sm text-slate-800 break-words">{formData.reporterEmail}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="lg:col-span-12 border border-slate-200 bg-white rounded-3xl p-5">
+                        <div className="text-xs font-semibold text-slate-600 uppercase">Confirm before submitting</div>
+                        <div className="mt-3 border border-blue-200 bg-blue-50 rounded-2xl px-4 py-3 text-sm text-blue-900">
+                          Please confirm that the information you entered is true.
+                        </div>
+                        <label className="mt-4 flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={!!formData.certificationAccepted}
+                            onChange={(e) => {
+                              setFormData((prev) => ({ ...prev, certificationAccepted: e.target.checked }));
+                              setErrors((prev) => prev.filter((err) => err.field !== 'reporterEmail'));
+                            }}
+                            className="mt-1 h-5 w-5"
+                          />
+                          <span className="text-sm text-slate-800 leading-relaxed">
+                            I confirm that the information I entered is true.
+                          </span>
+                        </label>
+                        {!formData.certificationAccepted && (
+                          <div className="mt-2 text-sm text-slate-600">You must confirm before submitting.</div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Panel>
