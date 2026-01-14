@@ -1,14 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { Button } from '../ui/Button'
+import { CheckCircle, Copy } from 'lucide-react'
 
 type LocationState = {
   complaintId?: string
   email?: string
-}
-
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ')
 }
 
 function maskEmail(email: string) {
@@ -26,8 +23,6 @@ export default function ComplaintConfirmationPage() {
   const complaintId = state.complaintId || searchParams.get('id') || undefined
   const email = state.email
 
-  const canRender = Boolean(complaintId)
-
   const [copied, setCopied] = useState(false)
 
   const trackingLink = useMemo(() => {
@@ -37,106 +32,114 @@ export default function ComplaintConfirmationPage() {
 
   const copyId = async () => {
     if (!complaintId) return
-    try {
-      await navigator.clipboard.writeText(complaintId)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1500)
-    } catch {
-      // clipboard may be blocked; ignore
-    }
+    await navigator.clipboard.writeText(complaintId)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
-      <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 shadow-xl border-b border-slate-700">
-        <div className="w-full px-6 sm:px-10 lg:px-16 py-8 sm:py-10 flex items-center justify-between gap-8 animate-fade-in">
-          <Link to="/" className="flex items-center gap-8 focus:outline-none focus:ring-2 focus:ring-amber-500 rounded-lg">
-            <img
-              src="/logo.png"
-              alt="Inspekto Logo"
-              className="h-20 sm:h-24 w-20 sm:w-24 object-contain drop-shadow-lg flex-shrink-0"
-            />
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
+      {/* Header */}
+      <header className="bg-slate-900 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-4">
+            <img src="/logo.png" alt="Inspekto" className="h-14 w-14 object-contain" />
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">Inspekto</h1>
-              <p className="mt-2 text-slate-300 text-base sm:text-lg font-medium tracking-wide">Complaint Confirmation</p>
+              <h1 className="text-xl font-bold text-white">Inspekto</h1>
+              <p className="text-sm text-slate-300">Complaint Confirmation</p>
             </div>
           </Link>
 
-          <div className="hidden sm:flex items-center gap-3">
-            <Link
-              to="/tracking"
-              className="text-sm font-bold text-slate-200 hover:text-white px-4 py-2 rounded-lg hover:bg-white/10 transition duration-200 whitespace-nowrap"
-            >
+          <div className="hidden sm:flex gap-3">
+            <Link to="/tracking" className="text-sm font-semibold text-slate-300 hover:text-white">
               Tracking
             </Link>
-            <Link
-              to="/complaints/submit"
-              className="text-sm font-bold text-slate-200 hover:text-white px-4 py-2 rounded-lg hover:bg-white/10 transition duration-200 whitespace-nowrap"
-            >
+            <Link to="/complaints/submit" className="text-sm font-semibold text-slate-300 hover:text-white">
               Submit Complaint
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="w-full px-8 py-12 flex justify-center">
-        <div className="w-full max-w-4xl">
-          {!canRender ? (
-            <section className="bg-white rounded-2xl shadow-xl border border-slate-200 p-10 animate-fade-in-up">
-              <h2 className="text-3xl font-bold text-slate-900">Confirmation unavailable</h2>
-              <p className="mt-3 text-slate-600 text-lg">
-                This page needs a complaint ID. If you just submitted a complaint, return to the submission page and try again.
+      {/* Main */}
+      <main className="flex justify-center px-6 py-16">
+        <div className="w-full max-w-3xl">
+          {!complaintId ? (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xl p-10">
+              <h2 className="text-2xl font-bold text-slate-900">Confirmation unavailable</h2>
+              <p className="mt-3 text-slate-600">
+                This page requires a valid complaint ID.
               </p>
               <div className="mt-8 flex gap-4">
                 <Link to="/complaints/submit">
-                  <Button size="lg">Go to submission</Button>
+                  <Button size="lg">Submit complaint</Button>
                 </Link>
                 <Link to="/">
-                  <Button variant="secondary" size="lg">Back to landing</Button>
+                  <Button size="lg" variant="secondary">Back home</Button>
                 </Link>
               </div>
-            </section>
+            </div>
           ) : (
-            <section className="bg-white rounded-2xl shadow-xl border border-slate-200 p-10 animate-fade-in-up">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xl p-12">
+              {/* Success */}
               <div className="text-center">
-                <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Complaint submitted</h2>
-                <p className="mt-3 text-slate-600 text-lg">Save your tracking ID to track status updates.</p>
-              </div>
-
-              <div className="mt-10 flex justify-center">
-                <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-slate-50 p-8">
-                  <div className="text-sm font-bold text-slate-600 uppercase tracking-widest">Tracking ID</div>
-                  <div className="mt-4 text-4xl sm:text-5xl font-bold text-slate-900 font-mono tracking-wider break-all">
-                    {complaintId}
-                  </div>
-
-                  <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-                    <Link to={trackingLink}>
-                      <Button size="lg">Go to tracking</Button>
-                    </Link>
-                    <Button type="button" variant="secondary" size="lg" onClick={() => void copyId()}>
-                      {copied ? 'Copied' : 'Copy tracking ID'}
-                    </Button>
-                  </div>
-
-                  {email && (
-                    <div className="mt-6 text-sm text-slate-600 text-center">
-                      A confirmation email with this tracking ID was sent to{' '}
-                      <span className={cx('font-semibold', 'text-slate-900')}>{maskEmail(email)}</span>.
-                    </div>
-                  )}
+                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+                  <CheckCircle className="h-8 w-8 text-emerald-700" />
                 </div>
+
+                <h2 className="text-4xl font-bold text-slate-900">
+                  Complaint submitted successfully
+                </h2>
+                <p className="mt-4 text-lg text-slate-600">
+                  Keep your tracking ID safe. You’ll need it to check progress.
+                </p>
               </div>
 
-              <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
+              {/* Tracking ID */}
+              <div className="mt-12 rounded-xl border border-slate-200 bg-slate-50 p-8 text-center">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                  Tracking ID
+                </p>
+
+                <p className="mt-4 text-4xl font-mono font-bold tracking-wider text-slate-900 break-all">
+                  {complaintId}
+                </p>
+
+                <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+                  <Link to={trackingLink}>
+                    <Button size="lg">Track complaint</Button>
+                  </Link>
+
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    onClick={() => void copyId()}
+                  >
+                    <Copy className="h-4 w-4 mr-2 inline-block" />
+                    {copied ? 'Copied' : 'Copy ID'}
+                  </Button>
+                </div>
+
+                {email && (
+                  <p className="mt-6 text-sm text-slate-600">
+                    A confirmation email was sent to{' '}
+                    <span className="font-semibold text-slate-900">
+                      {maskEmail(email)}
+                    </span>
+                  </p>
+                )}
+              </div>
+
+              {/* Footer actions */}
+              <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">
                 <Link to="/complaints/submit">
                   <Button size="lg">Submit another complaint</Button>
                 </Link>
                 <Link to="/">
-                  <Button variant="secondary" size="lg">Back to landing</Button>
+                  <Button size="lg" variant="secondary">Back to home</Button>
                 </Link>
               </div>
-            </section>
+            </div>
           )}
         </div>
       </main>
