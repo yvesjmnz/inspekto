@@ -27,15 +27,7 @@ export function ComplaintsHeader({ subtitle }: { subtitle?: string }) {
           </div>
         </Link>
 
-        <nav className="hidden sm:flex items-center pl-6">
-          <Link
-            to="/"
-            className="group inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-medium text-slate-900 bg-white shadow-sm hover:bg-slate-100 transition-colors whitespace-nowrap"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2 text-slate-700 group-hover:-translate-x-0.5 transition-transform" />
-            Home
-          </Link>
-        </nav>
+        {/* Intentionally no right-side navigation; logo click returns home */}
       </div>
     </header>
   );

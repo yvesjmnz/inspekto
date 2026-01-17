@@ -1,74 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, FileText, Search } from 'lucide-react';
-
-function OptionCard(props: {
-  to: string;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  color: 'blue' | 'emerald';
-  note?: string;
-}) {
-
-  const colorClasses = {
-    blue: {
-      icon: 'bg-gradient-to-br from-blue-500 to-blue-600',
-      border: 'hover:border-blue-300',
-      text: 'text-blue-600',
-      bar: 'bg-gradient-to-r from-blue-500 to-blue-600'
-    },
-    emerald: {
-      icon: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
-      border: 'hover:border-emerald-300',
-      text: 'text-emerald-600',
-      bar: 'bg-gradient-to-r from-emerald-500 to-emerald-600'
-    }
-  };
-
-  const colors = colorClasses[props.color];
-
-  return (
-    <Link
-      to={props.to}
-      className={`group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer border border-slate-200 ${colors.border} transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${props.color}-500`}
-    >
-      <div className="p-8">
-        {/* Icon */}
-        <div className={`inline-flex items-center justify-center w-16 h-16 ${colors.icon} rounded-xl shadow-lg mb-6 group-hover:scale-110 transition-transform duration-300`}>
-          {props.icon}
-        </div>
-
-        {/* Title */}
-        <h3 className="text-2xl font-bold text-slate-900 mb-3">
-          {props.title}
-        </h3>
-
-        {/* Description */}
-        <p className="text-slate-600 mb-2 leading-relaxed">
-          {props.description}
-        </p>
-
-        {/* Action Link */}
-        <div className={`mt-6 flex items-center gap-2 ${colors.text} font-semibold group-hover:gap-4 transition-all duration-300`}>
-          <span>Open</span>
-          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-        </div>
-
-        {/* Bottom Note */}
-        {props.note !== undefined && (
-          <div className="mt-6 pt-6 border-t border-slate-100">
-            <p className="text-sm text-slate-500">
-              {props.note || '\u00A0'}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Hover Effect Overlay */}
-      <div className={`h-1.5 ${colors.bar} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left`} />
-    </Link>
-  );
-}
+import { FileText, Search } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -78,7 +9,7 @@ export default function LandingPage() {
           <img
             src="/logo.png"
             alt="Inspekto Logo"
-            className="h-24 sm:h-28 lg:h-32 w-24 sm:w-28 lg:w-32 object-contain drop-shadow-lg flex-shrink-0 transform hover:scale-110 transition-transform duration-300"
+            className="h-24 sm:h-28 lg:h-32 w-24 sm:w-28 lg:w-32 object-contain drop-shadow-lg flex-shrink-0"
           />
           <div className="flex-1">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight">Inspekto</h1>
@@ -89,60 +20,50 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="flex-1 flex items-start justify-center py-8">
-        {/* Welcome Section */}
-        <div className="max-w-6xl mx-auto px-8">
-          <div className="text-center mb-16 animate-fade-in-up">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Welcome
-            </h2>
-            <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-              Choose an option below to submit a new complaint or track an existing one.
-            </p>
-          </div>
+      {/* Layout: keep content vertically centered, but slightly left of center */}
+      <main className="flex-1 min-h-0">
+        <div className="h-full grid grid-cols-12">
+          {/* Left spacer */}
+          <div className="hidden lg:block lg:col-span-3" />
 
-          {/* Action Cards - Using OptionCard pattern */}
-          <div className="grid gap-6 md:grid-cols-2">
-            <OptionCard
-              to="/complaints/submit"
-              title="Submit Complaint"
-              description="File a new complaint and receive a Tracking ID for future updates."
-              icon={<FileText className="w-8 h-8 text-white" />}
-              color="blue"
-              note="Keep your Tracking ID safe—you'll need it to check status updates."
-            />
+          {/* Content */}
+          <div className="col-span-12 lg:col-span-6 flex items-center">
+            <section className="w-full px-8 py-12 lg:py-0">
+              <div className="mx-auto max-w-3xl lg:mx-0">
+                <h2 className="text-center lg:text-left text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight leading-tight">
+                  <span className="font-extrabold">Inspekto Complaint</span>
+                  <br />
+                  <span className="font-extrabold">Management System</span>
+                </h2>
 
-            <OptionCard
-              to="/tracking"
-              title="Tracking"
-              description="Enter your Tracking ID to view the current complaint status."
-              icon={<Search className="w-8 h-8 text-white" />}
-              color="emerald"
-              note=""
-            />
-          </div>
+                <p className="mt-6 text-center lg:text-left text-slate-600 text-lg leading-relaxed max-w-2xl lg:max-w-none">
+                  Submit your complaint through our secure platform, receive a unique tracking ID, and monitor the
+                  progress of your case. All complaints are reviewed and processed according to regulatory standards.
+                </p>
 
-          {/* Additional Info Banner */}
-          <div className="mt-16 bg-gradient-to-r from-blue-50 to-slate-50 rounded-2xl border border-blue-100 p-8 shadow-md">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div className="mt-10 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 sm:gap-5">
+                  <Link
+                    to="/complaints/submit"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-full border border-red-300/70 bg-white/30 px-7 py-4 text-base font-semibold text-red-700 backdrop-blur-md shadow-sm hover:bg-red-50/40 hover:border-red-400/80 transition-colors"
+                  >
+                    <FileText className="h-5 w-5" />
+                    Submit a Complaint
+                  </Link>
+
+                  <Link
+                    to="/tracking"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-full border border-blue-300/70 bg-white/30 px-7 py-4 text-base font-semibold text-blue-700 backdrop-blur-md shadow-sm hover:bg-blue-50/40 hover:border-blue-400/80 transition-colors"
+                  >
+                    <Search className="h-5 w-5" />
+                    Tracking
+                  </Link>
                 </div>
               </div>
-              <div>
-                <h4 className="font-semibold text-slate-900 mb-2">
-                  How It Works
-                </h4>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  Submit your complaint through our secure platform, receive a unique tracking ID, and monitor the progress of your case. 
-                  All complaints are reviewed and processed according to regulatory standards.
-                </p>
-              </div>
-            </div>
+            </section>
           </div>
+
+          {/* Right spacer */}
+          <div className="hidden lg:block lg:col-span-3" />
         </div>
       </main>
     </div>

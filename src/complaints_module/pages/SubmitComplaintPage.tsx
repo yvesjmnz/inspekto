@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ComplaintForm } from '..'
+import { ComplaintsHeader } from '../ui/ComplaintsHeader'
 import { supabase } from '../../supabaseClient'
 
 type Status =
@@ -61,19 +62,7 @@ export default function SubmitComplaintPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex flex-col gap-8">
-      <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 shadow-xl border-b border-slate-700">
-        <div className="w-full px-6 sm:px-10 lg:px-16 py-10 sm:py-12 flex items-center gap-8 sm:gap-10 animate-fade-in">
-          <img
-            src="/logo.png"
-            alt="Inspekto Logo"
-            className="h-24 sm:h-28 lg:h-32 w-24 sm:w-28 lg:w-32 object-contain drop-shadow-lg flex-shrink-0 transform hover:scale-110 transition-transform duration-300"
-          />
-          <div className="flex-1">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight">Inspekto</h1>
-            <p className="mt-2 sm:mt-3 text-slate-300 text-base sm:text-lg lg:text-xl font-medium tracking-wide">Official Complaint Management System</p>
-          </div>
-        </div>
-      </header>
+      <ComplaintsHeader subtitle="Official Complaint Management System" />
 
       <main className="w-full py-12 flex justify-center">
         <div className="mx-auto w-full max-w-6xl px-8 md:px-12">

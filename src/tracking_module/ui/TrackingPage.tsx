@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '../../complaints_module/ui/Button';
 import { Alert } from '../../complaints_module/ui/Alert';
+import { ComplaintsHeader } from '../../complaints_module/ui/ComplaintsHeader';
 import { getTrackingSummary } from '../service';
 import type { TrackingSummary } from '../types';
 
@@ -75,33 +76,7 @@ export function TrackingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex flex-col gap-8">
-      <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 shadow-xl border-b border-slate-700">
-        <div className="w-full px-6 sm:px-10 lg:px-16 py-10 sm:py-12 flex items-center justify-between gap-8 sm:gap-10 animate-fade-in">
-          <Link
-            to="/"
-            className="flex items-center gap-8 sm:gap-10 focus:outline-none focus:ring-2 focus:ring-amber-500 rounded-lg"
-          >
-            <img
-              src="/logo.png"
-              alt="Inspekto Logo"
-              className="h-20 sm:h-24 lg:h-28 w-20 sm:w-24 lg:w-28 object-contain drop-shadow-lg flex-shrink-0 transform hover:scale-110 transition-transform duration-300"
-            />
-            <div className="flex-1">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">Inspekto</h1>
-              <p className="mt-2 text-slate-300 text-sm sm:text-base lg:text-lg font-medium tracking-wide">Tracking Portal</p>
-            </div>
-          </Link>
-
-          <div className="hidden sm:flex items-center gap-3">
-            <Link
-              to="/complaints/submit"
-              className="text-sm font-bold text-slate-200 hover:text-white px-4 py-2 rounded-lg hover:bg-white/10 transition duration-200 whitespace-nowrap"
-            >
-              Submit Complaint
-            </Link>
-          </div>
-        </div>
-      </header>
+      <ComplaintsHeader subtitle="Official Complaint Management System" />
 
       <main className="w-full px-8 py-12 flex justify-center">
         <div className="w-full max-w-6xl">
