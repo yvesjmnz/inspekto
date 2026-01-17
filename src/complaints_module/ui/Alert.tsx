@@ -2,6 +2,13 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
 }
 
+/**
+ * Alert
+ * Styled closer to SubmitComplaintPage.tsx:
+ * - rounded-lg
+ * - light background + border
+ * - simple typography
+ */
 export function Alert({
   kind,
   title,
@@ -13,26 +20,19 @@ export function Alert({
 }) {
   const styles =
     kind === 'success'
-      ? 'border-l-4 border-l-emerald-600 bg-emerald-50 text-emerald-900 shadow-md'
+      ? 'bg-green-50 border border-green-200 text-green-900'
       : kind === 'warning'
-        ? 'border-l-4 border-l-amber-600 bg-amber-50 text-amber-900 shadow-md'
+        ? 'bg-amber-50 border border-amber-200 text-amber-900'
         : kind === 'error'
-          ? 'border-l-4 border-l-red-600 bg-red-50 text-red-900 shadow-md'
-          : 'border-l-4 border-l-blue-600 bg-blue-50 text-blue-900 shadow-md';
-
-  const titleStyles =
-    kind === 'success'
-      ? 'text-emerald-900'
-      : kind === 'warning'
-        ? 'text-amber-900'
-        : kind === 'error'
-          ? 'text-red-900'
-          : 'text-blue-900';
+          ? 'bg-red-50 border border-red-200 text-red-900'
+          : 'bg-blue-50 border border-blue-200 text-blue-900';
 
   return (
-    <div className={cx('rounded-2xl px-7 py-6 animate-slide-up transition-all duration-300 shadow-lg-glow', styles)} role="alert">
-      <div className={cx('text-lg font-bold', titleStyles)}>{title}</div>
-      <div className="mt-2 text-base leading-relaxed font-medium">{message}</div>
+    <div className={cx('rounded-lg p-4 flex items-start gap-3', styles)} role="alert">
+      <div>
+        <div className="text-sm font-medium">{title}</div>
+        <div className="mt-1 text-sm opacity-90 leading-relaxed">{message}</div>
+      </div>
     </div>
   );
 }

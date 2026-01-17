@@ -9,6 +9,14 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: 'md' | 'lg' | 'xl';
 };
 
+/**
+ * Button
+ * Styled to match the SubmitComplaintPage look:
+ * - rounded-lg
+ * - clear focus rings
+ * - subtle shadow
+ * - teal primary
+ */
 export function Button({
   variant = 'primary',
   size = 'md',
@@ -16,24 +24,23 @@ export function Button({
   ...rest
 }: Props) {
   const base =
-    'inline-flex items-center justify-center gap-2 font-semibold tracking-tight transition-all duration-200 ' +
-    'focus:outline-none focus:ring-4 focus:ring-slate-200 disabled:opacity-50 disabled:cursor-not-allowed select-none ' +
-    'active:scale-[0.99] active:translate-y-[0.5px] disabled:active:translate-y-0 disabled:active:scale-100 ' +
-    'min-h-12';
+    'inline-flex items-center justify-center gap-2 font-medium transition-colors ' +
+    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white ' +
+    'disabled:opacity-50 disabled:cursor-not-allowed select-none';
 
   const sizing =
     size === 'xl'
-      ? 'px-8 py-4 rounded-2xl text-lg sm:text-xl font-bold'
+      ? 'px-6 py-4 rounded-lg text-lg'
       : size === 'lg'
-        ? 'px-7 py-3.5 rounded-xl text-base sm:text-lg'
-        : 'px-6 py-3 rounded-xl text-base';
+        ? 'px-5 py-3 rounded-lg text-base'
+        : 'px-4 py-2.5 rounded-lg text-sm';
 
   const styles =
     variant === 'primary'
-      ? 'bg-slate-900 text-white border border-slate-900/10 shadow-sm hover:bg-slate-800 hover:shadow-md'
+      ? 'bg-[#1a5f5f] text-white hover:bg-[#164d4d] shadow-sm'
       : variant === 'danger'
-        ? 'bg-red-600 text-white border border-red-700/20 shadow-sm hover:bg-red-500 hover:shadow-md'
-        : 'bg-white text-slate-900 border border-slate-300 shadow-sm hover:bg-slate-50 hover:border-slate-400 hover:shadow-md';
+        ? 'bg-red-600 text-white hover:bg-red-700 shadow-sm'
+        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:text-gray-900';
 
   return <button {...rest} className={cx(base, sizing, styles, className)} />;
 }

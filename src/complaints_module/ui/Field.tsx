@@ -1,5 +1,12 @@
 import type { ReactNode } from 'react';
 
+/**
+ * Field
+ * Matches SubmitComplaintPage.tsx design language:
+ * - uppercase label
+ * - smaller helper text
+ * - simple error presentation
+ */
 export function Field({
   label,
   hint,
@@ -14,19 +21,19 @@ export function Field({
   required?: boolean;
 }) {
   return (
-    <div className="transition-all duration-300 animate-float-up">
+    <div>
       <div className="flex items-baseline justify-between gap-3">
-        <label className="block text-lg font-bold text-slate-900">
+        <label className="block text-sm font-medium text-gray-700 uppercase tracking-wide">
           {label}
-          {!required && <span className="text-slate-500 font-normal text-base"> (optional)</span>}
+          {!required && <span className="text-gray-500 font-normal normal-case"> (optional)</span>}
         </label>
-        {hint && <div className="text-sm text-slate-600 font-semibold">{hint}</div>}
+        {hint && <div className="text-xs text-gray-500">{hint}</div>}
       </div>
-      <div className="mt-3">{children}</div>
+
+      <div className="mt-2">{children}</div>
+
       {error && (
-        <div className="mt-3 text-base text-red-700 font-bold animate-slide-down">
-          {error}
-        </div>
+        <div className="mt-2 text-sm text-red-700 font-medium">{error}</div>
       )}
     </div>
   );

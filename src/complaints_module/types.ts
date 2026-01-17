@@ -40,7 +40,8 @@ export interface Complaint {
   complaint_description: string;
   reporter_email: string;
   image_urls: string[];
-  authenticity_level: null; // Phase 1: always null
+  authenticity_level: number; // 0..100 numeric score
+  authenticity_tier?: 'Low' | 'Medium' | 'High';
   tags: string[];
   created_at: string;
 

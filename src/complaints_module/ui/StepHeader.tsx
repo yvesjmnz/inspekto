@@ -14,12 +14,12 @@ function StepPill({
   return (
     <div
       className={cx(
-        'flex h-10 w-10 items-center justify-center rounded-full border text-sm font-bold transition-colors',
+        'flex h-9 w-9 items-center justify-center rounded-full border text-sm font-medium transition-colors',
         isActive
           ? 'bg-blue-600 text-white border-blue-600'
           : isComplete
             ? 'bg-blue-50 text-blue-700 border-blue-200'
-            : 'bg-white text-slate-500 border-slate-200'
+            : 'bg-white text-gray-500 border-gray-200'
       )}
       aria-current={isActive ? 'step' : undefined}
     >
@@ -28,6 +28,10 @@ function StepPill({
   );
 }
 
+/**
+ * StepHeader
+ * Aligns with SubmitComplaintPage.tsx: flatter, rounded-lg, gray borders.
+ */
 export function StepHeader({
   stepIndex,
   stepCount,
@@ -42,15 +46,21 @@ export function StepHeader({
   const current = stepIndex + 1;
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-200 bg-white px-8 py-7">
-        <div className="text-center">
-          <div className="text-xs font-bold uppercase tracking-widest text-blue-700">Public Complaint Form</div>
-          <div className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">Submit a Complaint</div>
-          <div className="mt-2 text-sm font-semibold text-slate-700">Step {current} of {stepCount}</div>
+    <div className="space-y-4">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm px-6 py-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="text-xs font-medium text-gray-600 uppercase tracking-wide">Public Complaint Form</div>
+            <div className="mt-2 text-2xl sm:text-3xl font-semibold text-gray-900">Submit a Complaint</div>
+            <div className="mt-1 text-sm text-gray-600">Step {current} of {stepCount}</div>
+          </div>
+          <div className="text-left sm:text-right">
+            <div className="text-sm font-medium text-gray-900">{title}</div>
+            {description ? <div className="mt-1 text-sm text-gray-600">{description}</div> : null}
+          </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-center gap-3 overflow-x-auto py-1">
+        <div className="mt-5 flex items-center gap-3 overflow-x-auto py-1">
           {Array.from({ length: stepCount }).map((_, i) => {
             const n = i + 1;
             return (
@@ -58,20 +68,13 @@ export function StepHeader({
                 <StepPill number={n} isActive={n === current} isComplete={n < current} />
                 {n < stepCount && (
                   <div
-                    className={cx(
-                      'h-[2px] w-10 rounded-full',
-                      n < current ? 'bg-blue-300' : 'bg-slate-200'
-                    )}
+                    className={cx('h-[2px] w-10 rounded-full', n < current ? 'bg-blue-300' : 'bg-gray-200')}
                     aria-hidden="true"
                   />
                 )}
               </div>
             );
           })}
-        </div>
-
-        <div className="mt-6 text-center">
-          <div className="text-xl font-bold text-slate-900">{title}</div>
         </div>
       </div>
     </div>

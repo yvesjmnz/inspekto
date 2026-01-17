@@ -78,7 +78,8 @@ export async function submitComplaint(formData: ComplaintFormData): Promise<Subm
 
           image_urls: [],
           
-          authenticity_level: null,
+          // Let DB triggers compute / clamp authenticity_level based on spam rules.
+          // If DB default is configured, omitting is fine; keeping undefined avoids overriding.
           tags: formData.locationVerificationTag ? [formData.locationVerificationTag] : [],
           status: 'Submitted',
 
@@ -96,7 +97,8 @@ export async function submitComplaint(formData: ComplaintFormData): Promise<Subm
           certification_accepted_at: formData.certificationAccepted ? new Date().toISOString() : null,
         },
       ])
-      .select('id')
+      // Select id plus server-computed tags/authenticity if we want to display later.
+      .select('id, authenticity_level, authenticity_tier, tags')
       .single();
 
     if (error) throw error;

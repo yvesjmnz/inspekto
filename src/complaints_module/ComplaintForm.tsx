@@ -159,6 +159,7 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [evidencePreviews, setEvidencePreviews] = useState<string[]>([]);
+  const additionalPhotosInputRef = useRef<HTMLInputElement | null>(null);
 
   const businessNameError = getFieldError(errors, 'businessName');
   const businessAddressError = getFieldError(errors, 'businessAddress');
@@ -1116,6 +1117,7 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
 
                         <div className="flex flex-wrap items-center gap-3">
                           <input
+                            ref={additionalPhotosInputRef}
                             id="additional-photos"
                             type="file"
                             multiple
@@ -1123,9 +1125,20 @@ export default function ComplaintForm({ prefillEmail }: { prefillEmail?: string 
                             onChange={(e) => handleEvidenceFiles('images', e.target.files)}
                             className="hidden"
                           />
-                          <label htmlFor="additional-photos" className="inline-flex">
-                            <Button type="button" size="lg">Choose files</Button>
-                          </label>
+
+                          <Button
+                            type="button"
+                            size="lg"
+                            onClick={() => {
+                              // Reset value so selecting the same file twice still triggers onChange.
+                              if (additionalPhotosInputRef.current) {
+                                additionalPhotosInputRef.current.value = '';
+                                additionalPhotosInputRef.current.click();
+                              }
+                            }}
+                          >
+                            Choose files
+                          </Button>
 
                           {(formData.images || []).length > 1 && (
                             <Button
